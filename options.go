@@ -48,7 +48,7 @@ func WrapCore(f func(zapcore.Core) zapcore.Core) Option {
 // number of emitted logs. More complex side effects, including anything that
 // requires access to the Entry's structured fields, should be implemented as
 // a zapcore.Core instead. See zapcore.RegisterHooks for details.
-func Hooks(hooks ...func(zapcore.Entry) error) Option {
+func Hooks(hooks ...func(zapcore.Entry, []Field) error) Option {
 	return optionFunc(func(log *Logger) {
 		log.core = zapcore.RegisterHooks(log.core, hooks...)
 	})
