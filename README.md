@@ -1,4 +1,4 @@
-fork from: <https://github.com/uber-go/zap> v1.9.1
+fork from: <https://github.com/uber-go/zap> v1.12.0
 
 
 Do not set `time.Now` for low level logs.
@@ -14,7 +14,7 @@ Usage: Replace `"github.com/uber-go/zap"` to `"github.com/Laisky/zap"`.
 
 ### Hook with fields
 
-New hook func is: `func(e zapcore.Entry, fs []zapcore.Field) (err error)`
+New hook `HooksWithFields` is: `func(e zapcore.Entry, fs []zapcore.Field) (err error)`
 
 Example:
 

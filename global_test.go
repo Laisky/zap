@@ -32,9 +32,9 @@ import (
 	"github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
 
+	"github.com/Laisky/atomic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/atomic"
 )
 
 func TestReplaceGlobals(t *testing.T) {
@@ -273,7 +273,7 @@ func checkStdLogMessage(t *testing.T, msg string, logs *observer.ObservedLogs) {
 	assert.Equal(t, "redirected", entry.Entry.Message, "Unexpected entry message.")
 	assert.Regexp(
 		t,
-		`github.com/Laisky/zap/global_test.go:\d+$`,
+		`/global_test.go:\d+$`,
 		entry.Entry.Caller.String(),
 		"Unexpected caller annotation.",
 	)

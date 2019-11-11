@@ -31,9 +31,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Laisky/zap/zapcore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/Laisky/zap/zapcore"
 )
 
 func TestOpenNoPaths(t *testing.T) {

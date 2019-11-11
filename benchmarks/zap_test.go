@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.uber.org/multierr"
+	"github.com/Laisky/multierr"
 	"github.com/Laisky/zap"
 	"github.com/Laisky/zap/internal/ztest"
 	"github.com/Laisky/zap/zapcore"

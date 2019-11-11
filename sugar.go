@@ -25,7 +25,7 @@ import (
 
 	"github.com/Laisky/zap/zapcore"
 
-	"go.uber.org/multierr"
+	"github.com/Laisky/multierr"
 )
 
 const (

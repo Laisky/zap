@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,26 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package zaptest
+// See #682 for more information.
+// +build go1.12
 
-import (
-	"testing"
-	"time"
+package zap
 
-	"github.com/Laisky/zap/internal/ztest"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestTimeout(t *testing.T) {
-	defer ztest.Initialize("2")()
-	assert.Equal(t, time.Duration(100), Timeout(50), "Expected to scale up timeout.")
-}
-
-func TestSleep(t *testing.T) {
-	defer ztest.Initialize("2")()
-	const sleepFor = 50 * time.Millisecond
-	now := time.Now()
-	Sleep(sleepFor)
-	elapsed := time.Since(now)
-	assert.True(t, 2*sleepFor <= elapsed, "Expected to scale up timeout.")
-}
+const _stdLogDefaultDepth = 1

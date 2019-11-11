@@ -17,8 +17,8 @@ you to accept the CLA when you open your pull request.
 [Fork][fork], then clone the repository:
 
 ```
-mkdir -p $GOPATH/src/go.uber.org
-cd $GOPATH/src/go.uber.org
+mkdir -p $GOPATH/src/github.com/Laisky
+cd $GOPATH/src/github.com/Laisky
 git clone git@github.com:your_github_username/zap.git
 cd zap
 git remote add upstream https://github.com/uber-go/zap.git

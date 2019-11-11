@@ -21,7 +21,7 @@
 package zap
 
 import (
-	"go.uber.org/atomic"
+	"github.com/Laisky/atomic"
 	"github.com/Laisky/zap/zapcore"
 )
 

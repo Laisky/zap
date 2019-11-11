@@ -30,14 +30,23 @@ import (
 	"github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
 
+	"github.com/Laisky/atomic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/atomic"
 )
 
 func makeCountingHook() (func(zapcore.Entry) error, *atomic.Int64) {
 	count := &atomic.Int64{}
 	h := func(zapcore.Entry) error {
+		count.Inc()
+		return nil
+	}
+	return h, count
+}
+
+func makeCountingHookWithFields() (func(zapcore.Entry, []zapcore.Field) error, *atomic.Int64) {
+	count := &atomic.Int64{}
+	h := func(zapcore.Entry, []zapcore.Field) error {
 		count.Inc()
 		return nil
 	}
@@ -395,6 +404,15 @@ func TestLoggerReplaceCore(t *testing.T) {
 func TestLoggerHooks(t *testing.T) {
 	hook, seen := makeCountingHook()
 	withLogger(t, DebugLevel, opts(Hooks(hook)), func(logger *Logger, logs *observer.ObservedLogs) {
+		logger.Debug("")
+		logger.Info("")
+	})
+	assert.Equal(t, int64(2), seen.Load(), "Hook saw an unexpected number of logs.")
+}
+
+func TestLoggerHooksWithFields(t *testing.T) {
+	hook, seen := makeCountingHookWithFields()
+	withLogger(t, DebugLevel, opts(HooksWithFields(hook)), func(logger *Logger, logs *observer.ObservedLogs) {
 		logger.Debug("")
 		logger.Info("")
 	})

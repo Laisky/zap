@@ -1,0 +1,11 @@
+module github.com/Laisky/zap
+
+go 1.13
+
+require (
+	github.com/pkg/errors v0.8.1
+	github.com/stretchr/testify v1.4.0
+	github.com/Laisky/atomic v1.5.0
+	github.com/Laisky/multierr v1.3.0
+	golang.org/x/lint v0.0.0-20190930215403-16217165b5de
+)

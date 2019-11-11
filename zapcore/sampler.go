@@ -23,7 +23,7 @@ package zapcore
 import (
 	"time"
 
-	"go.uber.org/atomic"
+	"github.com/Laisky/atomic"
 )
 
 const (

@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/atomic"
+	"github.com/Laisky/atomic"
 	"github.com/Laisky/zap/internal/ztest"
 	. "github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
