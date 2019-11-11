@@ -1,9 +1,9 @@
 package: github.com/Laisky/zap
 license: MIT
 import:
-- package: github.com/Laisky/atomic
+- package: go.uber.org/atomic
   version: ^1
-- package: github.com/Laisky/multierr
+- package: go.uber.org/multierr
   version: ^1
 testImport:
 - package: github.com/satori/go.uuid

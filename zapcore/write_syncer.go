@@ -24,7 +24,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/Laisky/multierr"
+	"go.uber.org/multierr"
 )
 
 // A WriteSyncer is an io.Writer that can also flush any buffered data. Note

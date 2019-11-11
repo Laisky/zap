@@ -32,9 +32,9 @@ import (
 	"github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
 
-	"github.com/Laisky/atomic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/atomic"
 )
 
 func TestReplaceGlobals(t *testing.T) {

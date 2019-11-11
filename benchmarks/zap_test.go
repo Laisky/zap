@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Laisky/multierr"
 	"github.com/Laisky/zap"
 	"github.com/Laisky/zap/internal/ztest"
 	"github.com/Laisky/zap/zapcore"
+	"go.uber.org/multierr"
 )
 
 var (

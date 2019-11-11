@@ -82,7 +82,7 @@ Enhancements:
 
 Enhancements:
 
-* [#460][] and [#470][]: Support errors produced by `github.com/Laisky/multierr`.
+* [#460][] and [#470][]: Support errors produced by `go.uber.org/multierr`.
 * [#465][]: Support user-supplied encoders for logger names.
 
 Bugfixes:

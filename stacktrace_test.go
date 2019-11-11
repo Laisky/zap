@@ -51,7 +51,7 @@ func TestIsZapFrame(t *testing.T) {
 	}
 	nonZapFrames := []string{
 		"github.com/uber/tchannel-go.NewChannel",
-		"github.com/Laisky/not-zap.New",
+		"go.uber.org/not-zap.New",
 		"github.com/Laisky/zapext.ctx",
 		"github.com/Laisky/zap_ext/ctx.New",
 	}

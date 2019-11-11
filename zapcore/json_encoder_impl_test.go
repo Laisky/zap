@@ -32,8 +32,8 @@ import (
 
 	"github.com/Laisky/zap/internal/bufferpool"
 
-	"github.com/Laisky/multierr"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/multierr"
 )
 
 func TestJSONClone(t *testing.T) {

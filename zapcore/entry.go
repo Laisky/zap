@@ -29,7 +29,7 @@ import (
 	"github.com/Laisky/zap/internal/bufferpool"
 	"github.com/Laisky/zap/internal/exit"
 
-	"github.com/Laisky/multierr"
+	"go.uber.org/multierr"
 )
 
 var (

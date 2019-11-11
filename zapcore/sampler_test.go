@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Laisky/atomic"
 	"github.com/Laisky/zap/internal/ztest"
 	. "github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
+	"go.uber.org/atomic"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

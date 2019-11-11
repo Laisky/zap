@@ -21,8 +21,8 @@
 package zap
 
 import (
-	"github.com/Laisky/atomic"
 	"github.com/Laisky/zap/zapcore"
+	"go.uber.org/atomic"
 )
 
 const (
