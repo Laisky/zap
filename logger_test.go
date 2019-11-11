@@ -277,7 +277,7 @@ func TestLoggerNames(t *testing.T) {
 		{[]string{"foo.", ".bar"}, "foo...bar"},
 	}
 
-	for _, gd := range tests {
+	for _, tt := range tests {
 		withLogger(t, DebugLevel, nil, func(log *Logger, logs *observer.ObservedLogs) {
 			for _, n := range tt.names {
 				log = log.Named(n)

@@ -24,7 +24,7 @@ import "go.uber.org/multierr"
 
 type hooked struct {
 	Core
-	funcs []func(Entry, []Field) error
+	funcs []func(Entry) error
 }
 
 // RegisterHooks wraps a Core and runs a collection of user-defined callback
@@ -32,8 +32,8 @@ type hooked struct {
 //
 // This offers users an easy way to register simple callbacks (e.g., metrics
 // collection) without implementing the full Core interface.
-func RegisterHooks(core Core, hooks ...func(Entry, []Field) error) Core {
-	funcs := append([]func(Entry, []Field) error{}, hooks...)
+func RegisterHooks(core Core, hooks ...func(Entry) error) Core {
+	funcs := append([]func(Entry) error{}, hooks...)
 	return &hooked{
 		Core:  core,
 		funcs: funcs,
@@ -57,12 +57,12 @@ func (h *hooked) With(fields []Field) Core {
 	}
 }
 
-func (h *hooked) Write(ent Entry, fields []Field) error {
+func (h *hooked) Write(ent Entry, _ []Field) error {
 	// Since our downstream had a chance to register itself directly with the
 	// CheckedMessage, we don't need to call it here.
 	var err error
 	for i := range h.funcs {
-		err = multierr.Append(err, h.funcs[i](ent, fields))
+		err = multierr.Append(err, h.funcs[i](ent))
 	}
 	return err
 }
