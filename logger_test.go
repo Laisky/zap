@@ -348,7 +348,12 @@ func TestLoggerAddCaller(t *testing.T) {
 		options []Option
 		pat     string
 	}{
+		{opts(), `^undefined$`},
+		{opts(WithCaller(false)), `^undefined$`},
 		{opts(AddCaller()), `.+/logger_test.go:[\d]+$`},
+		{opts(AddCaller(), WithCaller(false)), `^undefined$`},
+		{opts(WithCaller(true)), `.+/logger_test.go:[\d]+$`},
+		{opts(WithCaller(true), WithCaller(false)), `^undefined$`},
 		{opts(AddCaller(), AddCallerSkip(1), AddCallerSkip(-1)), `.+/zap/logger_test.go:[\d]+$`},
 		{opts(AddCaller(), AddCallerSkip(1)), `.+/zap/common_test.go:[\d]+$`},
 		{opts(AddCaller(), AddCallerSkip(1), AddCallerSkip(3)), `.+/src/runtime/.*:[\d]+$`},
@@ -370,10 +375,89 @@ func TestLoggerAddCaller(t *testing.T) {
 	}
 }
 
+func TestLoggerAddCallerFunction(t *testing.T) {
+	tests := []struct {
+		options         []Option
+		loggerFunction  string
+		sugaredFunction string
+	}{
+		{
+			options:         opts(),
+			loggerFunction:  "",
+			sugaredFunction: "",
+		},
+		{
+			options:         opts(WithCaller(false)),
+			loggerFunction:  "",
+			sugaredFunction: "",
+		},
+		{
+			options:         opts(AddCaller()),
+			loggerFunction:  "github.com/Laisky/zap.infoLog",
+			sugaredFunction: "github.com/Laisky/zap.infoLogSugared",
+		},
+		{
+			options:         opts(AddCaller(), WithCaller(false)),
+			loggerFunction:  "",
+			sugaredFunction: "",
+		},
+		{
+			options:         opts(WithCaller(true)),
+			loggerFunction:  "github.com/Laisky/zap.infoLog",
+			sugaredFunction: "github.com/Laisky/zap.infoLogSugared",
+		},
+		{
+			options:         opts(WithCaller(true), WithCaller(false)),
+			loggerFunction:  "",
+			sugaredFunction: "",
+		},
+		{
+			options:         opts(AddCaller(), AddCallerSkip(1), AddCallerSkip(-1)),
+			loggerFunction:  "github.com/Laisky/zap.infoLog",
+			sugaredFunction: "github.com/Laisky/zap.infoLogSugared",
+		},
+		{
+			options:         opts(AddCaller(), AddCallerSkip(2)),
+			loggerFunction:  "github.com/Laisky/zap.withLogger",
+			sugaredFunction: "github.com/Laisky/zap.withLogger",
+		},
+		{
+			options:         opts(AddCaller(), AddCallerSkip(2), AddCallerSkip(3)),
+			loggerFunction:  "runtime.goexit",
+			sugaredFunction: "runtime.goexit",
+		},
+	}
+	for _, tt := range tests {
+		withLogger(t, DebugLevel, tt.options, func(logger *Logger, logs *observer.ObservedLogs) {
+			// Make sure that sugaring and desugaring resets caller skip properly.
+			logger = logger.Sugar().Desugar()
+			infoLog(logger, "")
+			infoLogSugared(logger.Sugar(), "")
+			infoLog(logger.Sugar().Desugar(), "")
+
+			entries := logs.AllUntimed()
+			assert.Equal(t, 3, len(entries), "Unexpected number of logs written out.")
+			for _, entry := range []observer.LoggedEntry{entries[0], entries[2]} {
+				assert.Regexp(
+					t,
+					tt.loggerFunction,
+					entry.Entry.Caller.Function,
+					"Expected to find function name in output.",
+				)
+			}
+			assert.Regexp(
+				t,
+				tt.sugaredFunction,
+				entries[1].Entry.Caller.Function,
+				"Expected to find function name in output.",
+			)
+		})
+	}
+}
+
 func TestLoggerAddCallerFail(t *testing.T) {
 	errBuf := &ztest.Buffer{}
-	withLogger(t, DebugLevel, opts(AddCaller(), ErrorOutput(errBuf)), func(log *Logger, logs *observer.ObservedLogs) {
-		log.callerSkip = 1e3
+	withLogger(t, DebugLevel, opts(AddCaller(), AddCallerSkip(1e3), ErrorOutput(errBuf)), func(log *Logger, logs *observer.ObservedLogs) {
 		log.Info("Failure.")
 		assert.Regexp(
 			t,
@@ -386,6 +470,11 @@ func TestLoggerAddCallerFail(t *testing.T) {
 			logs.AllUntimed()[0].Entry.Message,
 			"Failure.",
 			"Expected original message to survive failures in runtime.Caller.")
+		assert.Equal(
+			t,
+			logs.AllUntimed()[0].Entry.Caller.Function,
+			"",
+			"Expected function name to be empty string.")
 	})
 }
 
@@ -398,6 +487,21 @@ func TestLoggerReplaceCore(t *testing.T) {
 		logger.Info("")
 		logger.Warn("")
 		assert.Equal(t, 0, logs.Len(), "Expected no-op core to write no logs.")
+	})
+}
+
+func TestLoggerIncreaseLevel(t *testing.T) {
+	withLogger(t, DebugLevel, opts(IncreaseLevel(WarnLevel)), func(logger *Logger, logs *observer.ObservedLogs) {
+		logger.Info("logger.Info")
+		logger.Warn("logger.Warn")
+		logger.Error("logger.Error")
+		require.Equal(t, 2, logs.Len(), "expected only warn + error logs due to IncreaseLevel.")
+		assert.Equal(
+			t,
+			logs.AllUntimed()[0].Entry.Message,
+			"logger.Warn",
+			"Expected first logged message to be warn level message",
+		)
 	})
 }
 
@@ -447,4 +551,77 @@ func TestLoggerConcurrent(t *testing.T) {
 			)
 		}
 	})
+}
+
+func TestLoggerCustomOnFatal(t *testing.T) {
+	tests := []struct {
+		msg          string
+		onFatal      zapcore.CheckWriteAction
+		recoverValue interface{}
+	}{
+		{
+			msg:          "panic",
+			onFatal:      zapcore.WriteThenPanic,
+			recoverValue: "fatal",
+		},
+		{
+			msg:          "goexit",
+			onFatal:      zapcore.WriteThenGoexit,
+			recoverValue: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.msg, func(t *testing.T) {
+			withLogger(t, InfoLevel, opts(OnFatal(tt.onFatal)), func(logger *Logger, logs *observer.ObservedLogs) {
+				var finished bool
+				recovered := make(chan interface{})
+				go func() {
+					defer func() {
+						recovered <- recover()
+					}()
+
+					logger.Fatal("fatal")
+					finished = true
+				}()
+
+				assert.Equal(t, tt.recoverValue, <-recovered, "unexpected value from recover()")
+				assert.False(t, finished, "expect goroutine to not finish after Fatal")
+
+				assert.Equal(t, []observer.LoggedEntry{{
+					Entry:   zapcore.Entry{Level: FatalLevel, Message: "fatal"},
+					Context: []Field{},
+				}}, logs.AllUntimed(), "unexpected logs")
+			})
+		})
+	}
+}
+
+func TestNopLogger(t *testing.T) {
+	logger := NewNop()
+
+	t.Run("basic levels", func(t *testing.T) {
+		logger.Debug("foo", String("k", "v"))
+		logger.Info("bar", Int("x", 42))
+		logger.Warn("baz", Strings("ks", []string{"a", "b"}))
+		logger.Error("qux", Error(errors.New("great sadness")))
+	})
+
+	t.Run("DPanic", func(t *testing.T) {
+		logger.With(String("component", "whatever")).DPanic("stuff")
+	})
+
+	t.Run("Panic", func(t *testing.T) {
+		assert.Panics(t, func() {
+			logger.Panic("great sadness")
+		}, "Nop logger should still cause panics.")
+	})
+}
+
+func infoLog(logger *Logger, msg string, fields ...Field) {
+	logger.Info(msg, fields...)
+}
+
+func infoLogSugared(logger *SugaredLogger, args ...interface{}) {
+	logger.Info(args...)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2021 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,14 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package benchmarks
+package zapio_test
 
 import (
-	"io/ioutil"
+	"io"
+	"log"
 
-	"go.pedge.io/lion"
+	"github.com/Laisky/zap"
+	"github.com/Laisky/zap/zapio"
 )
 
-func newLion() lion.Logger {
-	return lion.NewLogger(lion.NewJSONWritePusher(ioutil.Discard))
+func ExampleWriter() {
+	logger := zap.NewExample()
+	w := &zapio.Writer{Log: logger}
+
+	io.WriteString(w, "starting up\n")
+	io.WriteString(w, "running\n")
+	io.WriteString(w, "shutting down\n")
+
+	if err := w.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Output:
+	// {"level":"info","msg":"starting up"}
+	// {"level":"info","msg":"running"}
+	// {"level":"info","msg":"shutting down"}
 }
