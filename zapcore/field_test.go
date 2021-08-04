@@ -31,6 +31,7 @@ import (
 	"github.com/Laisky/zap"
 	. "github.com/Laisky/zap/zapcore"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type users int
@@ -79,6 +80,19 @@ func (o *obj) String() string {
 	return "obj"
 }
 
+type errObj struct {
+	kind   int
+	errMsg string
+}
+
+func (eobj *errObj) Error() string {
+	if eobj.kind == 1 {
+		panic("panic in Error() method")
+	} else {
+		return eobj.errMsg
+	}
+}
+
 func TestUnknownFieldType(t *testing.T) {
 	unknown := Field{Key: "k", String: "foo"}
 	assert.Equal(t, UnknownType, unknown.Type, "Expected zero value of FieldType to be UnknownType.")
@@ -97,11 +111,12 @@ func TestFieldAddingError(t *testing.T) {
 	}{
 		{t: ArrayMarshalerType, iface: users(-1), want: []interface{}{}, err: "too few users"},
 		{t: ObjectMarshalerType, iface: users(-1), want: map[string]interface{}{}, err: "too few users"},
+		{t: InlineMarshalerType, iface: users(-1), want: nil, err: "too few users"},
 		{t: StringerType, iface: obj{}, want: empty, err: "PANIC=interface conversion: zapcore_test.obj is not fmt.Stringer: missing method String"},
 		{t: StringerType, iface: &obj{1}, want: empty, err: "PANIC=panic with string"},
 		{t: StringerType, iface: &obj{2}, want: empty, err: "PANIC=panic with error"},
 		{t: StringerType, iface: &obj{3}, want: empty, err: "PANIC=<nil>"},
-		{t: StringerType, iface: (*url.URL)(nil), want: empty, err: "PANIC=runtime error: invalid memory address or nil pointer dereference"},
+		{t: ErrorType, iface: &errObj{kind: 1}, want: empty, err: "PANIC=panic in Error() method"},
 	}
 	for _, tt := range tests {
 		f := Field{Key: "k", Interface: tt.iface, Type: tt.t}
@@ -122,7 +137,6 @@ func TestFields(t *testing.T) {
 	}{
 		{t: ArrayMarshalerType, iface: users(2), want: []interface{}{"user", "user"}},
 		{t: ObjectMarshalerType, iface: users(2), want: map[string]interface{}{"users": 2}},
-		{t: BinaryType, iface: []byte("foo"), want: []byte("foo")},
 		{t: BoolType, i: 0, want: false},
 		{t: ByteStringType, iface: []byte("foo"), want: "foo"},
 		{t: Complex128Type, iface: 1 + 2i, want: 1 + 2i},
@@ -148,6 +162,9 @@ func TestFields(t *testing.T) {
 		{t: StringerType, iface: &obj{}, want: "obj"},
 		{t: StringerType, iface: (*obj)(nil), want: "nil obj"},
 		{t: SkipType, want: interface{}(nil)},
+		{t: StringerType, iface: (*url.URL)(nil), want: "<nil>"},
+		{t: StringerType, iface: (*users)(nil), want: "<nil>"},
+		{t: ErrorType, iface: (*errObj)(nil), want: "<nil>"},
 	}
 
 	for _, tt := range tests {
@@ -163,7 +180,36 @@ func TestFields(t *testing.T) {
 	}
 }
 
+func TestInlineMarshaler(t *testing.T) {
+	enc := NewMapObjectEncoder()
+
+	topLevelStr := Field{Key: "k", Type: StringType, String: "s"}
+	topLevelStr.AddTo(enc)
+
+	inlineObj := Field{Key: "ignored", Type: InlineMarshalerType, Interface: users(10)}
+	inlineObj.AddTo(enc)
+
+	nestedObj := Field{Key: "nested", Type: ObjectMarshalerType, Interface: users(11)}
+	nestedObj.AddTo(enc)
+
+	assert.Equal(t, map[string]interface{}{
+		"k":     "s",
+		"users": 10,
+		"nested": map[string]interface{}{
+			"users": 11,
+		},
+	}, enc.Fields)
+}
+
 func TestEquals(t *testing.T) {
+	// Values outside the UnixNano range were encoded incorrectly (#737, #803).
+	timeOutOfRangeHigh := time.Unix(0, math.MaxInt64).Add(time.Nanosecond)
+	timeOutOfRangeLow := time.Unix(0, math.MinInt64).Add(-time.Nanosecond)
+	timeOutOfRangeHighNano := time.Unix(0, timeOutOfRangeHigh.UnixNano())
+	timeOutOfRangeLowNano := time.Unix(0, timeOutOfRangeLow.UnixNano())
+	require.False(t, timeOutOfRangeHigh.Equal(timeOutOfRangeHighNano), "should be different as value is >  UnixNano range")
+	require.False(t, timeOutOfRangeHigh.Equal(timeOutOfRangeHighNano), "should be different as value is <  UnixNano range")
+
 	tests := []struct {
 		a, b Field
 		want bool
@@ -196,6 +242,16 @@ func TestEquals(t *testing.T) {
 		{
 			a:    zap.Time("k", time.Unix(1000, 1000).In(time.UTC)),
 			b:    zap.Time("k", time.Unix(1000, 1000).In(time.FixedZone("TEST", -8))),
+			want: false,
+		},
+		{
+			a:    zap.Time("k", timeOutOfRangeLow),
+			b:    zap.Time("k", timeOutOfRangeLowNano),
+			want: false,
+		},
+		{
+			a:    zap.Time("k", timeOutOfRangeHigh),
+			b:    zap.Time("k", timeOutOfRangeHighNano),
 			want: false,
 		},
 		{

@@ -20,5 +20,3 @@ Example:
 
 * <https://github.com/Laisky/go-utils/blob/fc5d8c9f5e419e64d4779758f6666dd60cfa6eb4/logger_test.go#L138>
 * <https://github.com/Laisky/go-utils/blob/261a79711965d859e6292183b50084e3ab881a12/logger.go#L312>
-
-

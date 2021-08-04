@@ -29,47 +29,46 @@ import (
 )
 
 func TestTakeStacktrace(t *testing.T) {
-	trace := takeStacktrace()
+	trace := takeStacktrace(0)
 	lines := strings.Split(trace, "\n")
-	require.True(t, len(lines) > 0, "Expected stacktrace to have at least one frame.")
+	require.NotEmpty(t, lines, "Expected stacktrace to have at least one frame.")
+	assert.Contains(
+		t,
+		lines[0],
+		"github.com/Laisky/zap.TestTakeStacktrace",
+		"Expected stacktrace to start with the test.",
+	)
+}
+
+func TestTakeStacktraceWithSkip(t *testing.T) {
+	trace := takeStacktrace(1)
+	lines := strings.Split(trace, "\n")
+	require.NotEmpty(t, lines, "Expected stacktrace to have at least one frame.")
 	assert.Contains(
 		t,
 		lines[0],
 		"testing.",
-		"Expected stacktrace to start with the test runner (zap frames are filtered out) %s.", lines[0],
+		"Expected stacktrace to start with the test runner (skipping our own frame).",
 	)
 }
 
-func TestIsZapFrame(t *testing.T) {
-	zapFrames := []string{
-		"github.com/Laisky/zap.Stack",
-		"github.com/Laisky/zap.(*SugaredLogger).log",
-		"github.com/Laisky/zap/zapcore.(ArrayMarshalerFunc).MarshalLogArray",
-		"github.com/uber/tchannel-go/vendor/github.com/Laisky/zap.Stack",
-		"github.com/uber/tchannel-go/vendor/github.com/Laisky/zap.(*SugaredLogger).log",
-		"github.com/uber/tchannel-go/vendor/github.com/Laisky/zap/zapcore.(ArrayMarshalerFunc).MarshalLogArray",
-	}
-	nonZapFrames := []string{
-		"github.com/uber/tchannel-go.NewChannel",
-		"go.uber.org/not-zap.New",
-		"github.com/Laisky/zapext.ctx",
-		"github.com/Laisky/zap_ext/ctx.New",
-	}
-
-	t.Run("zap frames", func(t *testing.T) {
-		for _, f := range zapFrames {
-			require.True(t, isZapFrame(f), f)
-		}
-	})
-	t.Run("non-zap frames", func(t *testing.T) {
-		for _, f := range nonZapFrames {
-			require.False(t, isZapFrame(f), f)
-		}
-	})
+func TestTakeStacktraceWithSkipInnerFunc(t *testing.T) {
+	var trace string
+	func() {
+		trace = takeStacktrace(2)
+	}()
+	lines := strings.Split(trace, "\n")
+	require.NotEmpty(t, lines, "Expected stacktrace to have at least one frame.")
+	assert.Contains(
+		t,
+		lines[0],
+		"testing.",
+		"Expected stacktrace to start with the test function (skipping the test function).",
+	)
 }
 
 func BenchmarkTakeStacktrace(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		takeStacktrace()
+		takeStacktrace(0)
 	}
 }

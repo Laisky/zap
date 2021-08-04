@@ -23,9 +23,8 @@ package zapcore
 import (
 	"bytes"
 	"errors"
-	"testing"
-
 	"io"
+	"testing"
 
 	"github.com/Laisky/zap/internal/ztest"
 	"github.com/stretchr/testify/assert"
