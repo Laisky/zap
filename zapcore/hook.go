@@ -45,6 +45,7 @@ func RegisterHooks(core Core, hooks ...func(Entry) error) Core {
 	}
 }
 
+// RegisterHooksWithFields like RegisterHooks but and invoke hooks with arbitary fileds
 func RegisterHooksWithFields(core Core, hooks ...func(Entry, []Field) error) Core {
 	funcs := append([]func(Entry, []Field) error{}, hooks...)
 	return &hookedWithFields{
