@@ -63,7 +63,9 @@ func TestJSONEncodeEntry(t *testing.T) {
 				"M": "lob law",
 				"so": "passes",
 				"answer": 42,
+				"a_float32": 2.71,
 				"common_pie": 3.14,
+				"complex_value": "3.14-2.71i",
 				"null_value": null,
 				"array_with_null_elements": [{}, null, null, 2],
 				"such": {
@@ -86,6 +88,8 @@ func TestJSONEncodeEntry(t *testing.T) {
 				zap.String("so", "passes"),
 				zap.Int("answer", 42),
 				zap.Float64("common_pie", 3.14),
+				zap.Float32("a_float32", 2.71),
+				zap.Complex128("complex_value", 3.14-2.71i),
 				// Cover special-cased handling of nil in AddReflect() and
 				// AppendReflect(). Note that for the latter, we explicitly test
 				// correct results for both the nil static interface{} value

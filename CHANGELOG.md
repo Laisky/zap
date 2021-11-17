@@ -1,4 +1,43 @@
 # Changelog
+All notable changes to this project will be documented in this file.
+
+This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## Unreleased
+
+Enhancements:
+* [#989][]: `zapcore.EncoderConfig` provides a flag `SkipLineEnding` that can be used to skip adding a newline character to logs. Thanks to @lruggieri.
+
+Bugfixes:
+* [#1011][]: JSON: Fix inaccurate precision when encoding complex64.
+
+Other changes:
+* [#1028][]: Drop support for Go < 1.15.
+
+[#1011]: https://github.com/uber-go/zap/pull/1011
+[#989]: https://github.com/uber-go/zap/pull/989
+[#1028]: https://github.com/uber-go/zap/pull/1028
+
+## 1.19.1 (8 Sep 2021)
+
+Bugfixes:
+* [#1001][]: JSON: Fix complex number encoding with negative imaginary part. Thanks to @hemantjadon.
+* [#1003][]: JSON: Fix inaccurate precision when encoding float32.
+
+[#1001]: https://github.com/uber-go/zap/pull/1001
+[#1003]: https://github.com/uber-go/zap/pull/1003
+
+## 1.19.0 (9 Aug 2021)
+
+Enhancements:
+* [#975][]: Avoid panicking in Sampler core if the level is out of bounds.
+* [#984][]: Reduce the size of BufferedWriteSyncer by aligning the fields
+  better.
+
+[#975]: https://github.com/uber-go/zap/pull/975
+[#984]: https://github.com/uber-go/zap/pull/984
+
+Thanks to @lancoLiu and @thockin for their contributions to this release.
 
 ## 1.18.1 (28 Jun 2021)
 

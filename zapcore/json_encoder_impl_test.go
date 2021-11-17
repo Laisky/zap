@@ -121,32 +121,52 @@ func TestJSONEncoderObjectFields(t *testing.T) {
 		{"byteString", `"k":""`, func(e Encoder) { e.AddByteString("k", []byte{}) }},
 		{"byteString", `"k":""`, func(e Encoder) { e.AddByteString("k", nil) }},
 		{"complex128", `"k":"1+2i"`, func(e Encoder) { e.AddComplex128("k", 1+2i) }},
+		{"complex128/negative_i", `"k":"1-2i"`, func(e Encoder) { e.AddComplex128("k", 1-2i) }},
 		{"complex64", `"k":"1+2i"`, func(e Encoder) { e.AddComplex64("k", 1+2i) }},
+		{"complex64/negative_i", `"k":"1-2i"`, func(e Encoder) { e.AddComplex64("k", 1-2i) }},
+		{"complex64", `"k":"2.71+3.14i"`, func(e Encoder) { e.AddComplex64("k", 2.71+3.14i) }},
 		{"duration", `"k":0.000000001`, func(e Encoder) { e.AddDuration("k", 1) }},
+		{"duration/negative", `"k":-0.000000001`, func(e Encoder) { e.AddDuration("k", -1) }},
 		{"float64", `"k":1`, func(e Encoder) { e.AddFloat64("k", 1.0) }},
 		{"float64", `"k":10000000000`, func(e Encoder) { e.AddFloat64("k", 1e10) }},
 		{"float64", `"k":"NaN"`, func(e Encoder) { e.AddFloat64("k", math.NaN()) }},
 		{"float64", `"k":"+Inf"`, func(e Encoder) { e.AddFloat64("k", math.Inf(1)) }},
 		{"float64", `"k":"-Inf"`, func(e Encoder) { e.AddFloat64("k", math.Inf(-1)) }},
+		{"float64/pi", `"k":3.141592653589793`, func(e Encoder) { e.AddFloat64("k", math.Pi) }},
 		{"float32", `"k":1`, func(e Encoder) { e.AddFloat32("k", 1.0) }},
+		{"float32", `"k":2.71`, func(e Encoder) { e.AddFloat32("k", 2.71) }},
+		{"float32", `"k":0.1`, func(e Encoder) { e.AddFloat32("k", 0.1) }},
 		{"float32", `"k":10000000000`, func(e Encoder) { e.AddFloat32("k", 1e10) }},
 		{"float32", `"k":"NaN"`, func(e Encoder) { e.AddFloat32("k", float32(math.NaN())) }},
 		{"float32", `"k":"+Inf"`, func(e Encoder) { e.AddFloat32("k", float32(math.Inf(1))) }},
 		{"float32", `"k":"-Inf"`, func(e Encoder) { e.AddFloat32("k", float32(math.Inf(-1))) }},
+		{"float32/pi", `"k":3.1415927`, func(e Encoder) { e.AddFloat32("k", math.Pi) }},
 		{"int", `"k":42`, func(e Encoder) { e.AddInt("k", 42) }},
 		{"int64", `"k":42`, func(e Encoder) { e.AddInt64("k", 42) }},
+		{"int64/min", `"k":-9223372036854775808`, func(e Encoder) { e.AddInt64("k", math.MinInt64) }},
+		{"int64/max", `"k":9223372036854775807`, func(e Encoder) { e.AddInt64("k", math.MaxInt64) }},
 		{"int32", `"k":42`, func(e Encoder) { e.AddInt32("k", 42) }},
+		{"int32/min", `"k":-2147483648`, func(e Encoder) { e.AddInt32("k", math.MinInt32) }},
+		{"int32/max", `"k":2147483647`, func(e Encoder) { e.AddInt32("k", math.MaxInt32) }},
 		{"int16", `"k":42`, func(e Encoder) { e.AddInt16("k", 42) }},
+		{"int16/min", `"k":-32768`, func(e Encoder) { e.AddInt16("k", math.MinInt16) }},
+		{"int16/max", `"k":32767`, func(e Encoder) { e.AddInt16("k", math.MaxInt16) }},
 		{"int8", `"k":42`, func(e Encoder) { e.AddInt8("k", 42) }},
+		{"int8/min", `"k":-128`, func(e Encoder) { e.AddInt8("k", math.MinInt8) }},
+		{"int8/max", `"k":127`, func(e Encoder) { e.AddInt8("k", math.MaxInt8) }},
 		{"string", `"k":"v\\"`, func(e Encoder) { e.AddString(`k`, `v\`) }},
 		{"string", `"k":"v"`, func(e Encoder) { e.AddString("k", "v") }},
 		{"string", `"k":""`, func(e Encoder) { e.AddString("k", "") }},
 		{"time", `"k":1`, func(e Encoder) { e.AddTime("k", time.Unix(1, 0)) }},
 		{"uint", `"k":42`, func(e Encoder) { e.AddUint("k", 42) }},
 		{"uint64", `"k":42`, func(e Encoder) { e.AddUint64("k", 42) }},
+		{"uint64/max", `"k":18446744073709551615`, func(e Encoder) { e.AddUint64("k", math.MaxUint64) }},
 		{"uint32", `"k":42`, func(e Encoder) { e.AddUint32("k", 42) }},
+		{"uint32/max", `"k":4294967295`, func(e Encoder) { e.AddUint32("k", math.MaxUint32) }},
 		{"uint16", `"k":42`, func(e Encoder) { e.AddUint16("k", 42) }},
+		{"uint16/max", `"k":65535`, func(e Encoder) { e.AddUint16("k", math.MaxUint16) }},
 		{"uint8", `"k":42`, func(e Encoder) { e.AddUint8("k", 42) }},
+		{"uint8/max", `"k":255`, func(e Encoder) { e.AddUint8("k", math.MaxUint8) }},
 		{"uintptr", `"k":42`, func(e Encoder) { e.AddUintptr("k", 42) }},
 		{
 			desc:     "object (success)",
@@ -223,6 +243,36 @@ func TestJSONEncoderObjectFields(t *testing.T) {
 				e.OpenNamespace("inner")
 				e.AddInt("foo", 2)
 				e.OpenNamespace("innermost")
+			},
+		},
+		{
+			desc:     "object (no nested namespace)",
+			expected: `"obj":{"obj-out":"obj-outside-namespace"},"not-obj":"should-be-outside-obj"`,
+			f: func(e Encoder) {
+				e.AddObject("obj", maybeNamespace{false})
+				e.AddString("not-obj", "should-be-outside-obj")
+			},
+		},
+		{
+			desc:     "object (with nested namespace)",
+			expected: `"obj":{"obj-out":"obj-outside-namespace","obj-namespace":{"obj-in":"obj-inside-namespace"}},"not-obj":"should-be-outside-obj"`,
+			f: func(e Encoder) {
+				e.AddObject("obj", maybeNamespace{true})
+				e.AddString("not-obj", "should-be-outside-obj")
+			},
+		},
+		{
+			desc:     "multiple open namespaces",
+			expected: `"k":{"foo":1,"middle":{"foo":2,"inner":{"foo":3}}}`,
+			f: func(e Encoder) {
+				e.AddObject("k", ObjectMarshalerFunc(func(enc ObjectEncoder) error {
+					e.AddInt("foo", 1)
+					e.OpenNamespace("middle")
+					e.AddInt("foo", 2)
+					e.OpenNamespace("inner")
+					e.AddInt("foo", 3)
+					return nil
+				}))
 			},
 		},
 	}
@@ -366,6 +416,22 @@ func TestJSONEncoderArrays(t *testing.T) {
 				)
 			},
 		},
+		{
+			desc:     "object (no nested namespace) then string",
+			expected: `[{"obj-out":"obj-outside-namespace"},"should-be-outside-obj",{"obj-out":"obj-outside-namespace"},"should-be-outside-obj"]`,
+			f: func(arr ArrayEncoder) {
+				arr.AppendObject(maybeNamespace{false})
+				arr.AppendString("should-be-outside-obj")
+			},
+		},
+		{
+			desc:     "object (with nested namespace) then string",
+			expected: `[{"obj-out":"obj-outside-namespace","obj-namespace":{"obj-in":"obj-inside-namespace"}},"should-be-outside-obj",{"obj-out":"obj-outside-namespace","obj-namespace":{"obj-in":"obj-inside-namespace"}},"should-be-outside-obj"]`,
+			f: func(arr ArrayEncoder) {
+				arr.AppendObject(maybeNamespace{true})
+				arr.AppendString("should-be-outside-obj")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -499,6 +565,18 @@ func (l loggable) MarshalLogArray(enc ArrayEncoder) error {
 		return errors.New("can't marshal")
 	}
 	enc.AppendBool(true)
+	return nil
+}
+
+// maybeNamespace is an ObjectMarshaler that sometimes opens a namespace
+type maybeNamespace struct{ bool }
+
+func (m maybeNamespace) MarshalLogObject(enc ObjectEncoder) error {
+	enc.AddString("obj-out", "obj-outside-namespace")
+	if m.bool {
+		enc.OpenNamespace("obj-namespace")
+		enc.AddString("obj-in", "obj-inside-namespace")
+	}
 	return nil
 }
 

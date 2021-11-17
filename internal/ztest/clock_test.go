@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2021 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,9 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// See #682 for more information.
-// +build go1.12
+package ztest
 
-package zap
+import (
+	"testing"
+	"time"
 
-const _stdLogDefaultDepth = 1
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/atomic"
+)
+
+func TestMockClock_NewTicker(t *testing.T) {
+	var n atomic.Int32
+	clock := NewMockClock()
+
+	done := make(chan struct{})
+	defer func() { <-done }() // wait for end
+
+	quit := make(chan struct{})
+	// Create a channel to increment every microsecond.
+	go func(ticker *time.Ticker) {
+		defer close(done)
+		for {
+			select {
+			case <-quit:
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				n.Inc()
+			}
+		}
+	}(clock.NewTicker(time.Microsecond))
+
+	// Move clock forward.
+	clock.Add(2 * time.Microsecond)
+	assert.Equal(t, int32(2), n.Load())
+	close(quit)
+}
