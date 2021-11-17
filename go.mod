@@ -9,7 +9,7 @@ require (
 	go.uber.org/atomic v1.7.0
 	go.uber.org/goleak v1.1.11
 	go.uber.org/multierr v1.6.0
-	go.uber.org/zap v1.19.1
 	golang.org/x/lint v0.0.0-20190930215403-16217165b5de
 	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
