@@ -18,27 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package zaptest
+package zapcore
 
-import "github.com/Laisky/zap/internal/ztest"
-
-type (
-	// A Syncer is a spy for the Sync portion of zapcore.WriteSyncer.
-	Syncer = ztest.Syncer
-
-	// A Discarder sends all writes to io.Discard.
-	Discarder = ztest.Discarder
-
-	// FailWriter is a WriteSyncer that always returns an error on writes.
-	FailWriter = ztest.FailWriter
-
-	// ShortWriter is a WriteSyncer whose write method never returns an error,
-	// but always reports that it wrote one byte less than the input slice's
-	// length (thus, a "short write").
-	ShortWriter = ztest.ShortWriter
-
-	// Buffer is an implementation of zapcore.WriteSyncer that sends all writes to
-	// a bytes.Buffer. It has convenience methods to split the accumulated buffer
-	// on newlines.
-	Buffer = ztest.Buffer
+import (
+	"encoding/json"
+	"io"
 )
+
+// ReflectedEncoder serializes log fields that can't be serialized with Zap's
+// JSON encoder. These have the ReflectType field type.
+// Use EncoderConfig.NewReflectedEncoder to set this.
+type ReflectedEncoder interface {
+	// Encode encodes and writes to the underlying data stream.
+	Encode(interface{}) error
+}
+
+func defaultReflectedEncoder(w io.Writer) ReflectedEncoder {
+	enc := json.NewEncoder(w)
+	// For consistency with our custom JSON encoder.
+	enc.SetEscapeHTML(false)
+	return enc
+}

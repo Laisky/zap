@@ -30,3 +30,4 @@ _testmain.go
 /bin
 cover.out
 cover.html
+.vscode
