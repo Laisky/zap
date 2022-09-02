@@ -67,9 +67,8 @@ func TestNopCore(t *testing.T) {
 }
 
 func TestIOCore(t *testing.T) {
-	temp, err := os.CreateTemp("", "zapcore-test-iocore")
-	require.NoError(t, err, "Failed to create temp file.")
-	defer os.Remove(temp.Name())
+	temp, err := os.CreateTemp(t.TempDir(), "test.log")
+	require.NoError(t, err)
 
 	// Drop timestamps for simpler assertions (timestamp encoding is tested
 	// elsewhere).
@@ -82,6 +81,10 @@ func TestIOCore(t *testing.T) {
 		InfoLevel,
 	).With([]Field{makeInt64Field("k", 1)})
 	defer assert.NoError(t, core.Sync(), "Expected Syncing a temp file to succeed.")
+
+	t.Run("LevelOf", func(t *testing.T) {
+		assert.Equal(t, InfoLevel, LevelOf(core), "Incorrect Core Level")
+	})
 
 	if ce := core.Check(Entry{Level: DebugLevel, Message: "debug"}, nil); ce != nil {
 		ce.Write(makeInt64Field("k", 2))

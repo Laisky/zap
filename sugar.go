@@ -40,17 +40,17 @@ const (
 // Unlike the Logger, the SugaredLogger doesn't insist on structured logging.
 // For each log level, it exposes four methods:
 //
-//  - methods named after the log level for log.Print-style logging
-//  - methods ending in "w" for loosely-typed structured logging
-//  - methods ending in "f" for log.Printf-style logging
-//  - methods ending in "ln" for log.Println-style logging
+//   - methods named after the log level for log.Print-style logging
+//   - methods ending in "w" for loosely-typed structured logging
+//   - methods ending in "f" for log.Printf-style logging
+//   - methods ending in "ln" for log.Println-style logging
 //
 // For example, the methods for InfoLevel are:
 //
-//  Info(...any)           Print-style logging
-//  Infow(...any)          Structured logging (read as "info with")
-//  Infof(string, ...any)  Printf-style logging
-//  Infoln(...any)         Println-style logging
+//	Info(...any)           Print-style logging
+//	Infow(...any)          Structured logging (read as "info with")
+//	Infof(string, ...any)  Printf-style logging
+//	Infoln(...any)         Println-style logging
 type SugaredLogger struct {
 	base *Logger
 }
@@ -86,21 +86,24 @@ func (s *SugaredLogger) WithOptions(opts ...Option) *SugaredLogger {
 // and the second as the field value.
 //
 // For example,
-//   sugaredLogger.With(
-//     "hello", "world",
-//     "failure", errors.New("oh no"),
-//     Stack(),
-//     "count", 42,
-//     "user", User{Name: "alice"},
-//  )
+//
+//	 sugaredLogger.With(
+//	   "hello", "world",
+//	   "failure", errors.New("oh no"),
+//	   Stack(),
+//	   "count", 42,
+//	   "user", User{Name: "alice"},
+//	)
+//
 // is the equivalent of
-//   unsugared.With(
-//     String("hello", "world"),
-//     String("failure", "oh no"),
-//     Stack(),
-//     Int("count", 42),
-//     Object("user", User{Name: "alice"}),
-//   )
+//
+//	unsugared.With(
+//	  String("hello", "world"),
+//	  String("failure", "oh no"),
+//	  Stack(),
+//	  Int("count", 42),
+//	  Object("user", User{Name: "alice"}),
+//	)
 //
 // Note that the keys in key-value pairs should be strings. In development,
 // passing a non-string key panics. In production, the logger is more
@@ -109,6 +112,13 @@ func (s *SugaredLogger) WithOptions(opts ...Option) *SugaredLogger {
 // panics in development and errors in production.
 func (s *SugaredLogger) With(args ...interface{}) *SugaredLogger {
 	return &SugaredLogger{base: s.base.With(s.sweetenFields(args)...)}
+}
+
+// Level reports the minimum enabled level for this logger.
+//
+// For NopLoggers, this is [zapcore.InvalidLevel].
+func (s *SugaredLogger) Level() zapcore.Level {
+	return zapcore.LevelOf(s.base.core)
 }
 
 // Debug uses fmt.Sprint to construct and log a message.
@@ -187,7 +197,8 @@ func (s *SugaredLogger) Fatalf(template string, args ...interface{}) {
 // pairs are treated as they are in With.
 //
 // When debug-level logging is disabled, this is much faster than
-//  s.With(keysAndValues).Debug(msg)
+//
+//	s.With(keysAndValues).Debug(msg)
 func (s *SugaredLogger) Debugw(msg string, keysAndValues ...interface{}) {
 	s.log(DebugLevel, msg, nil, keysAndValues)
 }
@@ -231,38 +242,38 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 
 // Debugln uses fmt.Sprintln to construct and log a message.
 func (s *SugaredLogger) Debugln(args ...interface{}) {
-	s.logln(DebugLevel, "", args, nil)
+	s.logln(DebugLevel, args, nil)
 }
 
 // Infoln uses fmt.Sprintln to construct and log a message.
 func (s *SugaredLogger) Infoln(args ...interface{}) {
-	s.logln(InfoLevel, "", args, nil)
+	s.logln(InfoLevel, args, nil)
 }
 
 // Warnln uses fmt.Sprintln to construct and log a message.
 func (s *SugaredLogger) Warnln(args ...interface{}) {
-	s.logln(WarnLevel, "", args, nil)
+	s.logln(WarnLevel, args, nil)
 }
 
 // Errorln uses fmt.Sprintln to construct and log a message.
 func (s *SugaredLogger) Errorln(args ...interface{}) {
-	s.logln(ErrorLevel, "", args, nil)
+	s.logln(ErrorLevel, args, nil)
 }
 
 // DPanicln uses fmt.Sprintln to construct and log a message. In development, the
 // logger then panics. (See DPanicLevel for details.)
 func (s *SugaredLogger) DPanicln(args ...interface{}) {
-	s.logln(DPanicLevel, "", args, nil)
+	s.logln(DPanicLevel, args, nil)
 }
 
 // Panicln uses fmt.Sprintln to construct and log a message, then panics.
 func (s *SugaredLogger) Panicln(args ...interface{}) {
-	s.logln(PanicLevel, "", args, nil)
+	s.logln(PanicLevel, args, nil)
 }
 
 // Fatalln uses fmt.Sprintln to construct and log a message, then calls os.Exit.
 func (s *SugaredLogger) Fatalln(args ...interface{}) {
-	s.logln(FatalLevel, "", args, nil)
+	s.logln(FatalLevel, args, nil)
 }
 
 // Sync flushes any buffered log entries.
@@ -285,7 +296,7 @@ func (s *SugaredLogger) log(lvl zapcore.Level, template string, fmtArgs []interf
 }
 
 // logln message with Sprintln
-func (s *SugaredLogger) logln(lvl zapcore.Level, template string, fmtArgs []interface{}, context []interface{}) {
+func (s *SugaredLogger) logln(lvl zapcore.Level, fmtArgs []interface{}, context []interface{}) {
 	if lvl < DPanicLevel && !s.base.Core().Enabled(lvl) {
 		return
 	}

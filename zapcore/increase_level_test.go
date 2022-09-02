@@ -82,10 +82,12 @@ func TestIncreaseLevel(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			logger, logs := observer.New(tt.coreLevel)
 
+			// sanity check
+			require.Equal(t, tt.coreLevel, LevelOf(logger), "Original logger has the wrong level")
+
 			filteredLogger, err := NewIncreaseLevelCore(logger, tt.increaseLevel)
 			if tt.wantErr {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), "invalid increase level")
+				assert.ErrorContains(t, err, "invalid increase level")
 				return
 			}
 
@@ -94,6 +96,10 @@ func TestIncreaseLevel(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+
+			t.Run("LevelOf", func(t *testing.T) {
+				assert.Equal(t, tt.increaseLevel, LevelOf(filteredLogger), "Filtered logger has the wrong level")
+			})
 
 			for l := DebugLevel; l <= FatalLevel; l++ {
 				enabled := filteredLogger.Enabled(l)

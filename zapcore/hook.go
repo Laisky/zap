@@ -27,6 +27,11 @@ type hooked struct {
 	funcs []func(Entry) error
 }
 
+var (
+	_ Core           = (*hooked)(nil)
+	_ leveledEnabler = (*hooked)(nil)
+)
+
 type hookedWithFields struct {
 	Core
 	funcs []func(Entry, []Field) error
@@ -43,6 +48,10 @@ func RegisterHooks(core Core, hooks ...func(Entry) error) Core {
 		Core:  core,
 		funcs: funcs,
 	}
+}
+
+func (h *hooked) Level() Level {
+	return LevelOf(h.Core)
 }
 
 // RegisterHooksWithFields like RegisterHooks but and invoke hooks with arbitary fileds

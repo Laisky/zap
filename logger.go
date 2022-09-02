@@ -111,7 +111,7 @@ func NewDevelopment(options ...Option) (*Logger, error) {
 // and panics if the error is non-nil. It is intended for use in variable
 // initialization such as:
 //
-//     var logger = zap.Must(zap.NewProduction())
+//	var logger = zap.Must(zap.NewProduction())
 func Must(logger *Logger, err error) *Logger {
 	if err != nil {
 		panic(err)
@@ -181,6 +181,13 @@ func (log *Logger) With(fields ...Field) *Logger {
 	l := log.clone()
 	l.core = l.core.With(fields)
 	return l
+}
+
+// Level reports the minimum enabled level for this logger.
+//
+// For NopLoggers, this is [zapcore.InvalidLevel].
+func (log *Logger) Level() zapcore.Level {
+	return zapcore.LevelOf(log.core)
 }
 
 // Check returns a CheckedEntry if logging a message at the specified level

@@ -21,6 +21,7 @@
 package zap
 
 import (
+	"github.com/Laisky/zap/internal"
 	"github.com/Laisky/zap/zapcore"
 	"go.uber.org/atomic"
 )
@@ -69,6 +70,8 @@ func (f LevelEnablerFunc) Enabled(lvl zapcore.Level) bool { return f(lvl) }
 type AtomicLevel struct {
 	l *atomic.Int32
 }
+
+var _ internal.LeveledEnabler = AtomicLevel{}
 
 // NewAtomicLevel creates an AtomicLevel with InfoLevel and above logging
 // enabled.

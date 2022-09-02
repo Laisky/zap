@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2022 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,31 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package exit_test
+package internal
 
-import (
-	"testing"
+import "github.com/Laisky/zap/zapcore"
 
-	"github.com/Laisky/zap/internal/exit"
-	"github.com/stretchr/testify/assert"
-)
+// LeveledEnabler is an interface satisfied by LevelEnablers that are able to
+// report their own level.
+//
+// This interface is defined to use more conveniently in tests and non-zapcore
+// packages.
+// This cannot be imported from zapcore because of the cyclic dependency.
+type LeveledEnabler interface {
+	zapcore.LevelEnabler
 
-func TestStub(t *testing.T) {
-	type want struct {
-		exit bool
-		code int
-	}
-	tests := []struct {
-		f    func()
-		want want
-	}{
-		{func() { exit.With(42) }, want{exit: true, code: 42}},
-		{func() {}, want{}},
-	}
-
-	for _, tt := range tests {
-		s := exit.WithStub(tt.f)
-		assert.Equal(t, tt.want.exit, s.Exited, "Stub captured unexpected exit value.")
-		assert.Equal(t, tt.want.code, s.Code, "Stub captured unexpected exit value.")
-	}
+	Level() zapcore.Level
 }

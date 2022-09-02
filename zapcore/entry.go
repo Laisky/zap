@@ -156,10 +156,10 @@ type Entry struct {
 //
 // Register one on a CheckedEntry with the After method.
 //
-//  if ce := logger.Check(...); ce != nil {
-//    ce = ce.After(hook)
-//    ce.Write(...)
-//  }
+//	if ce := logger.Check(...); ce != nil {
+//	  ce = ce.After(hook)
+//	  ce.Write(...)
+//	}
 //
 // You can configure the hook for Fatal log statements at the logger level with
 // the zap.WithFatalHook option.
@@ -197,7 +197,7 @@ func (a CheckWriteAction) OnWrite(ce *CheckedEntry, _ []Field) {
 	case WriteThenPanic:
 		panic(ce.Message)
 	case WriteThenFatal:
-		exit.Exit()
+		exit.With(1)
 	}
 }
 
