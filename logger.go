@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/Laisky/zap/internal/bufferpool"
+	"github.com/Laisky/zap/internal/stacktrace"
 	"github.com/Laisky/zap/zapcore"
 )
 
@@ -173,7 +174,8 @@ func (log *Logger) WithOptions(opts ...Option) *Logger {
 }
 
 // With creates a child logger and adds structured context to it. Fields added
-// to the child don't affect the parent, and vice versa.
+// to the child don't affect the parent, and vice versa. Any fields that
+// require evaluation (such as Objects) are evaluated upon invocation of With.
 func (log *Logger) With(fields ...Field) *Logger {
 	if len(fields) == 0 {
 		return log
@@ -199,6 +201,8 @@ func (log *Logger) Check(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
 
 // Log logs a message at the specified level. The message includes any fields
 // passed at the log site, as well as any fields accumulated on the logger.
+// Any Fields that require  evaluation (such as Objects) are evaluated upon
+// invocation of Log.
 func (log *Logger) Log(lvl zapcore.Level, msg string, fields ...Field) {
 	if ce := log.check(lvl, msg); ce != nil {
 		ce.Write(fields...)
@@ -281,9 +285,15 @@ func (log *Logger) Core() zapcore.Core {
 	return log.core
 }
 
+// Name returns the Logger's underlying name,
+// or an empty string if the logger is unnamed.
+func (log *Logger) Name() string {
+	return log.name
+}
+
 func (log *Logger) clone() *Logger {
-	copy := *log
-	return &copy
+	clone := *log
+	return &clone
 }
 
 func (log *Logger) check(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
@@ -355,17 +365,17 @@ func (log *Logger) check(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
 
 	// Adding the caller or stack trace requires capturing the callers of
 	// this function. We'll share information between these two.
-	stackDepth := stacktraceFirst
+	stackDepth := stacktrace.First
 	if addStack {
-		stackDepth = stacktraceFull
+		stackDepth = stacktrace.Full
 	}
-	stack := captureStacktrace(log.callerSkip+callerSkipOffset, stackDepth)
+	stack := stacktrace.Capture(log.callerSkip+callerSkipOffset, stackDepth)
 	defer stack.Free()
 
 	if stack.Count() == 0 {
 		if log.addCaller {
 			fmt.Fprintf(log.errorOutput, "%v Logger.check error: failed to get caller\n", ent.Time.UTC())
-			log.errorOutput.Sync()
+			_ = log.errorOutput.Sync()
 		}
 		return ce
 	}
@@ -386,7 +396,7 @@ func (log *Logger) check(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
 		buffer := bufferpool.Get()
 		defer buffer.Free()
 
-		stackfmt := newStackFormatter(buffer)
+		stackfmt := stacktrace.NewFormatter(buffer)
 
 		// We've already extracted the first frame, so format that
 		// separately and defer to stackfmt for the rest.

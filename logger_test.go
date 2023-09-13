@@ -23,6 +23,7 @@ package zap
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/Laisky/zap/internal/exit"
@@ -32,13 +33,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/atomic"
 )
 
 func makeCountingHook() (func(zapcore.Entry) error, *atomic.Int64) {
 	count := &atomic.Int64{}
 	h := func(zapcore.Entry) error {
-		count.Inc()
+		count.Add(1)
 		return nil
 	}
 	return h, count
@@ -47,7 +47,7 @@ func makeCountingHook() (func(zapcore.Entry) error, *atomic.Int64) {
 func makeCountingHookWithFields() (func(zapcore.Entry, []zapcore.Field) error, *atomic.Int64) {
 	count := &atomic.Int64{}
 	h := func(zapcore.Entry, []zapcore.Field) error {
-		count.Inc()
+		count.Add(1)
 		return nil
 	}
 	return h, count
@@ -139,14 +139,53 @@ func TestLoggerWith(t *testing.T) {
 		// shouldn't stomp on each other's fields or affect the parent's fields.
 		logger.With(String("one", "two")).Info("")
 		logger.With(String("three", "four")).Info("")
+		logger.With(String("five", "six")).With(String("seven", "eight")).Info("")
 		logger.Info("")
 
 		assert.Equal(t, []observer.LoggedEntry{
 			{Context: []Field{Int("foo", 42), String("one", "two")}},
 			{Context: []Field{Int("foo", 42), String("three", "four")}},
+			{Context: []Field{Int("foo", 42), String("five", "six"), String("seven", "eight")}},
 			{Context: []Field{Int("foo", 42)}},
 		}, logs.AllUntimed(), "Unexpected cross-talk between child loggers.")
 	})
+}
+
+func TestLoggerWithCaptures(t *testing.T) {
+	enc := zapcore.NewJSONEncoder(zapcore.EncoderConfig{
+		MessageKey: "m",
+	})
+
+	var bs ztest.Buffer
+	logger := New(zapcore.NewCore(enc, &bs, DebugLevel))
+
+	x := 0
+	arr := zapcore.ArrayMarshalerFunc(func(enc zapcore.ArrayEncoder) error {
+		enc.AppendInt(x)
+		return nil
+	})
+
+	// Demonstrate the arguments are captured when With() and Info() are invoked.
+	logger = logger.With(Array("a", arr))
+	x = 1
+	logger.Info("hello", Array("b", arr))
+	x = 2
+	logger = logger.With(Array("c", arr))
+	logger.Info("world")
+
+	if lines := bs.Lines(); assert.Len(t, lines, 2) {
+		assert.JSONEq(t, `{
+			"m": "hello",
+			"a": [0],
+			"b": [1]
+		}`, lines[0], "Unexpected output from first log.")
+
+		assert.JSONEq(t, `{
+			"m": "world",
+			"a": [0],
+			"c": [2]
+		}`, lines[1], "Unexpected output from second log.")
+	}
 }
 
 func TestLoggerLogPanic(t *testing.T) {
@@ -349,7 +388,8 @@ func TestLoggerNames(t *testing.T) {
 			}
 			log.Info("")
 			require.Equal(t, 1, logs.Len(), "Expected only one log entry to be written.")
-			assert.Equal(t, tt.expected, logs.AllUntimed()[0].LoggerName, "Unexpected logger name.")
+			assert.Equal(t, tt.expected, logs.AllUntimed()[0].LoggerName, "Unexpected logger name from entry.")
+			assert.Equal(t, tt.expected, log.Name(), "Unexpected logger name.")
 		})
 		withSugar(t, DebugLevel, nil, func(log *SugaredLogger, logs *observer.ObservedLogs) {
 			for _, n := range tt.names {
@@ -357,7 +397,8 @@ func TestLoggerNames(t *testing.T) {
 			}
 			log.Infow("")
 			require.Equal(t, 1, logs.Len(), "Expected only one log entry to be written.")
-			assert.Equal(t, tt.expected, logs.AllUntimed()[0].LoggerName, "Unexpected logger name.")
+			assert.Equal(t, tt.expected, logs.AllUntimed()[0].LoggerName, "Unexpected logger name from entry.")
+			assert.Equal(t, tt.expected, log.base.Name(), "Unexpected logger name.")
 		})
 	}
 }

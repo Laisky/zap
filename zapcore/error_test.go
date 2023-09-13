@@ -26,9 +26,9 @@ import (
 	"io"
 	"testing"
 
-	richErrors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Laisky/zap/zapcore"
 	. "github.com/Laisky/zap/zapcore"
 	"go.uber.org/multierr"
 )
@@ -113,34 +113,28 @@ func TestErrorEncoding(t *testing.T) {
 		},
 		{
 			k:     "k",
-			iface: richErrors.WithMessage(errors.New("egad"), "failed"),
+			iface: fmt.Errorf("failed: %w", errors.New("egad")),
 			want: map[string]interface{}{
-				"k":        "failed: egad",
-				"kVerbose": "egad\nfailed",
+				"k": "failed: egad",
 			},
 		},
 		{
 			k: "error",
 			iface: multierr.Combine(
-				richErrors.WithMessage(
+				fmt.Errorf("hello: %w",
 					multierr.Combine(errors.New("foo"), errors.New("bar")),
-					"hello",
 				),
 				errors.New("baz"),
-				richErrors.WithMessage(errors.New("qux"), "world"),
+				fmt.Errorf("world: %w", errors.New("qux")),
 			),
 			want: map[string]interface{}{
 				"error": "hello: foo; bar; baz; world: qux",
 				"errorCauses": []interface{}{
 					map[string]interface{}{
 						"error": "hello: foo; bar",
-						"errorVerbose": "the following errors occurred:\n" +
-							" -  foo\n" +
-							" -  bar\n" +
-							"hello",
 					},
 					map[string]interface{}{"error": "baz"},
-					map[string]interface{}{"error": "world: qux", "errorVerbose": "qux\nworld"},
+					map[string]interface{}{"error": "world: qux"},
 				},
 			},
 		},
@@ -161,17 +155,56 @@ func TestErrorEncoding(t *testing.T) {
 func TestRichErrorSupport(t *testing.T) {
 	f := Field{
 		Type:      ErrorType,
-		Interface: richErrors.WithMessage(richErrors.New("egad"), "failed"),
+		Interface: fmt.Errorf("failed: %w", errors.New("egad")),
 		Key:       "k",
 	}
 	enc := NewMapObjectEncoder()
 	f.AddTo(enc)
 	assert.Equal(t, "failed: egad", enc.Fields["k"], "Unexpected basic error message.")
+}
 
-	serialized := enc.Fields["kVerbose"]
-	// Don't assert the exact format used by a third-party package, but ensure
-	// that some critical elements are present.
-	assert.Regexp(t, `egad`, serialized, "Expected original error message to be present.")
-	assert.Regexp(t, `failed`, serialized, "Expected error annotation to be present.")
-	assert.Regexp(t, `TestRichErrorSupport`, serialized, "Expected calling function to be present in stacktrace.")
+func TestErrArrayBrokenEncoder(t *testing.T) {
+	t.Parallel()
+
+	f := Field{
+		Key:  "foo",
+		Type: ErrorType,
+		Interface: multierr.Combine(
+			errors.New("foo"),
+			errors.New("bar"),
+		),
+	}
+
+	failWith := errors.New("great sadness")
+	enc := NewMapObjectEncoder()
+	f.AddTo(brokenArrayObjectEncoder{
+		Err:           failWith,
+		ObjectEncoder: enc,
+	})
+
+	// Failure to add the field to the encoder
+	// causes the error to be added as a string field.
+	assert.Equal(t, "great sadness", enc.Fields["fooError"],
+		"Unexpected error message.")
+}
+
+// brokenArrayObjectEncoder is an ObjectEncoder
+// that builds a broken ArrayEncoder.
+type brokenArrayObjectEncoder struct {
+	ObjectEncoder
+	ArrayEncoder
+
+	Err error // error to return
+}
+
+func (enc brokenArrayObjectEncoder) AddArray(key string, marshaler ArrayMarshaler) error {
+	return enc.ObjectEncoder.AddArray(key,
+		ArrayMarshalerFunc(func(ae ArrayEncoder) error {
+			enc.ArrayEncoder = ae
+			return marshaler.MarshalLogArray(enc)
+		}))
+}
+
+func (enc brokenArrayObjectEncoder) AppendObject(zapcore.ObjectMarshaler) error {
+	return enc.Err
 }

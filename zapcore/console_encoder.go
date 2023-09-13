@@ -22,20 +22,20 @@ package zapcore
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/Laisky/zap/buffer"
 	"github.com/Laisky/zap/internal/bufferpool"
+	"github.com/Laisky/zap/internal/pool"
 )
 
-var _sliceEncoderPool = sync.Pool{
-	New: func() interface{} {
-		return &sliceArrayEncoder{elems: make([]interface{}, 0, 2)}
-	},
-}
+var _sliceEncoderPool = pool.New(func() *sliceArrayEncoder {
+	return &sliceArrayEncoder{
+		elems: make([]interface{}, 0, 2),
+	}
+})
 
 func getSliceEncoder() *sliceArrayEncoder {
-	return _sliceEncoderPool.Get().(*sliceArrayEncoder)
+	return _sliceEncoderPool.Get()
 }
 
 func putSliceEncoder(e *sliceArrayEncoder) {

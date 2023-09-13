@@ -21,11 +21,11 @@
 package benchmarks
 
 import (
-	"io"
 	"log"
 	"testing"
 
 	"github.com/Laisky/zap"
+	"github.com/Laisky/zap/internal/ztest"
 )
 
 func BenchmarkDisabledWithoutFields(b *testing.B) {
@@ -92,6 +92,15 @@ func BenchmarkDisabledWithoutFields(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				logger.Info().Msg(getMessage(0))
+			}
+		})
+	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newDisabledSlog()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -164,6 +173,15 @@ func BenchmarkDisabledAccumulatedContext(b *testing.B) {
 			}
 		})
 	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newDisabledSlog(fakeSlogFields()...)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
+			}
+		})
+	})
 }
 
 func BenchmarkDisabledAddingFields(b *testing.B) {
@@ -221,6 +239,15 @@ func BenchmarkDisabledAddingFields(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				fakeZerologFields(logger.Info()).Msg(getMessage(0))
+			}
+		})
+	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newSlog()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0), fakeSlogFields())
 			}
 		})
 	})
@@ -293,7 +320,9 @@ func BenchmarkWithoutFields(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				logger.Log(getMessage(0), getMessage(1))
+				if err := logger.Log(getMessage(0), getMessage(1)); err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	})
@@ -316,7 +345,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("stdlib.Println", func(b *testing.B) {
-		logger := log.New(io.Discard, "", log.LstdFlags)
+		logger := log.New(&ztest.Discarder{}, "", log.LstdFlags)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -325,7 +354,7 @@ func BenchmarkWithoutFields(b *testing.B) {
 		})
 	})
 	b.Run("stdlib.Printf", func(b *testing.B) {
-		logger := log.New(io.Discard, "", log.LstdFlags)
+		logger := log.New(&ztest.Discarder{}, "", log.LstdFlags)
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
@@ -359,6 +388,15 @@ func BenchmarkWithoutFields(b *testing.B) {
 				if e := logger.Info(); e.Enabled() {
 					e.Msg(getMessage(0))
 				}
+			}
+		})
+	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newSlog()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -431,7 +469,9 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				logger.Log(getMessage(0), getMessage(1))
+				if err := logger.Log(getMessage(0), getMessage(1)); err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	})
@@ -479,6 +519,15 @@ func BenchmarkAccumulatedContext(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				logger.Info().Msgf("%v %v %v %s %v %v %v %v %v %s\n", fakeFmtArgs()...)
+			}
+		})
+	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newSlog(fakeSlogFields()...)
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0))
 			}
 		})
 	})
@@ -542,7 +591,9 @@ func BenchmarkAddingFields(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				logger.Log(fakeSugarFields()...)
+				if err := logger.Log(fakeSugarFields()...); err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	})
@@ -581,6 +632,15 @@ func BenchmarkAddingFields(b *testing.B) {
 				if e := logger.Info(); e.Enabled() {
 					fakeZerologFields(e).Msg(getMessage(0))
 				}
+			}
+		})
+	})
+	b.Run("slog", func(b *testing.B) {
+		logger := newSlog()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				logger.Info(getMessage(0), fakeSlogFields())
 			}
 		})
 	})
