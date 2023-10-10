@@ -56,10 +56,9 @@ func (h *hooked) Level() Level {
 
 // RegisterHooksWithFields like RegisterHooks but and invoke hooks with arbitary fileds
 func RegisterHooksWithFields(core Core, hooks ...func(Entry, []Field) error) Core {
-	funcs := append([]func(Entry, []Field) error{}, hooks...)
 	return &hookedWithFields{
 		Core:  core,
-		funcs: funcs,
+		funcs: hooks[:len(hooks):len(hooks)],
 	}
 }
 
@@ -112,6 +111,7 @@ func (h *hookedWithFields) Write(ent Entry, fs []Field) error {
 	// CheckedMessage, we don't need to call it here.
 	var err error
 	for i := range h.funcs {
+		fs = append(fs[:len(fs):len(fs)], h.Core.Fields()...)
 		err = multierr.Append(err, h.funcs[i](ent, fs))
 	}
 	return err

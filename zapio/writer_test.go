@@ -244,5 +244,6 @@ func (c *partiallyNopCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *z
 }
 
 func (c *partiallyNopCore) With([]zapcore.Field) zapcore.Core        { return c }
+func (*partiallyNopCore) Fields() []zapcore.Field                    { return nil }
 func (*partiallyNopCore) Write(zapcore.Entry, []zapcore.Field) error { return nil }
 func (*partiallyNopCore) Sync() error                                { return nil }

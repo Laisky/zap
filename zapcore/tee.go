@@ -53,6 +53,14 @@ func (mc multiCore) With(fields []Field) Core {
 	return clone
 }
 
+func (mc multiCore) Fields() (fields []Field) {
+	for i := range mc {
+		fields = append(fields, mc[i].Fields()...)
+	}
+
+	return fields
+}
+
 func (mc multiCore) Level() Level {
 	minLvl := _maxLevel // mc is never empty
 	for i := range mc {

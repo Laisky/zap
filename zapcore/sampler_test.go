@@ -163,6 +163,7 @@ func (c *countingCore) Write(Entry, []Field) error {
 }
 
 func (c *countingCore) With([]Field) Core { return c }
+func (*countingCore) Fields() []Field     { return nil }
 func (*countingCore) Enabled(Level) bool  { return true }
 func (*countingCore) Sync() error         { return nil }
 
