@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.26.0 (14 Sep 2023)
+Enhancements:
+* [#1297][]: Add Dict as a Field.
+* [#1319][]: Add `WithLazy` method to `Logger` which lazily evaluates the structured
+context.
+* [#1350][]: String encoding is much (~50%) faster now.
+
+Thanks to @hhk7734, @jquirke, and @cdvr1993 for their contributions to this release.
+
+[#1297]: https://github.com/uber-go/zap/pull/1297
+[#1319]: https://github.com/uber-go/zap/pull/1319
+[#1350]: https://github.com/uber-go/zap/pull/1350
+
 ## 1.25.0 (1 Aug 2023)
 
 This release contains several improvements including performance, API additions,
@@ -14,7 +27,7 @@ Enhancements:
 * [#1273][]: Add `Name` to `Logger` which returns the Logger's name if one is set.
 * [#1281][]: Add `zap/exp/expfield` package which contains helper methods
 `Str` and `Strs` for constructing String-like zap.Fields.
-* [#1310][]: Reduce stack size on `Any`. 
+* [#1310][]: Reduce stack size on `Any`.
 
 Thanks to @knight42, @dzakaammar, @bcspragu, and @rexywork for their contributions
 to this release.
@@ -341,7 +354,7 @@ to this release.
 [#675]: https://github.com/uber-go/zap/pull/675
 [#704]: https://github.com/uber-go/zap/pull/704
 
-## v1.9.1 (06 Aug 2018)
+## 1.9.1 (06 Aug 2018)
 
 Bugfixes:
 
@@ -349,7 +362,7 @@ Bugfixes:
 
 [#614]: https://github.com/uber-go/zap/pull/614
 
-## v1.9.0 (19 Jul 2018)
+## 1.9.0 (19 Jul 2018)
 
 Enhancements:
 * [#602][]: Reduce number of allocations when logging with reflection.
@@ -362,7 +375,7 @@ Thanks to @nfarah86, @AlekSi, @JeanMertz, @philippgille, @etsangsplk, and
 [#572]: https://github.com/uber-go/zap/pull/572
 [#606]: https://github.com/uber-go/zap/pull/606
 
-## v1.8.0 (13 Apr 2018)
+## 1.8.0 (13 Apr 2018)
 
 Enhancements:
 * [#508][]: Make log level configurable when redirecting the standard
@@ -380,14 +393,14 @@ Thanks to @DiSiqueira and @djui for their contributions to this release.
 [#577]: https://github.com/uber-go/zap/pull/577
 [#574]: https://github.com/uber-go/zap/pull/574
 
-## v1.7.1 (25 Sep 2017)
+## 1.7.1 (25 Sep 2017)
 
 Bugfixes:
 * [#504][]: Store strings when using AddByteString with the map encoder.
 
 [#504]: https://github.com/uber-go/zap/pull/504
 
-## v1.7.0 (21 Sep 2017)
+## 1.7.0 (21 Sep 2017)
 
 Enhancements:
 
@@ -396,7 +409,7 @@ Enhancements:
 
 [#487]: https://github.com/uber-go/zap/pull/487
 
-## v1.6.0 (30 Aug 2017)
+## 1.6.0 (30 Aug 2017)
 
 Enhancements:
 
@@ -407,7 +420,7 @@ Enhancements:
 [#490]: https://github.com/uber-go/zap/pull/490
 [#491]: https://github.com/uber-go/zap/pull/491
 
-## v1.5.0 (22 Jul 2017)
+## 1.5.0 (22 Jul 2017)
 
 Enhancements:
 
@@ -425,7 +438,7 @@ Thanks to @richard-tunein and @pavius for their contributions to this release.
 [#460]: https://github.com/uber-go/zap/pull/460
 [#470]: https://github.com/uber-go/zap/pull/470
 
-## v1.4.1 (08 Jun 2017)
+## 1.4.1 (08 Jun 2017)
 
 This release fixes two bugs.
 
@@ -437,7 +450,7 @@ Bugfixes:
 [#435]: https://github.com/uber-go/zap/pull/435
 [#444]: https://github.com/uber-go/zap/pull/444
 
-## v1.4.0 (12 May 2017)
+## 1.4.0 (12 May 2017)
 
 This release adds a few small features and is fully backward-compatible.
 
@@ -453,7 +466,7 @@ Enhancements:
 [#425]: https://github.com/uber-go/zap/pull/425
 [#431]: https://github.com/uber-go/zap/pull/431
 
-## v1.3.0 (25 Apr 2017)
+## 1.3.0 (25 Apr 2017)
 
 This release adds an enhancement to zap's testing helpers as well as the
 ability to marshal an AtomicLevel. It is fully backward-compatible.
@@ -467,7 +480,7 @@ Enhancements:
 [#415]: https://github.com/uber-go/zap/pull/415
 [#416]: https://github.com/uber-go/zap/pull/416
 
-## v1.2.0 (13 Apr 2017)
+## 1.2.0 (13 Apr 2017)
 
 This release adds a gRPC compatibility wrapper. It is fully backward-compatible.
 
@@ -478,7 +491,7 @@ Enhancements:
 
 [#402]: https://github.com/uber-go/zap/pull/402
 
-## v1.1.0 (31 Mar 2017)
+## 1.1.0 (31 Mar 2017)
 
 This release fixes two bugs and adds some enhancements to zap's testing helpers.
 It is fully backward-compatible.
@@ -499,7 +512,7 @@ Thanks to @moitias for contributing to this release.
 [#396]: https://github.com/uber-go/zap/pull/396
 [#386]: https://github.com/uber-go/zap/pull/386
 
-## v1.0.0 (14 Mar 2017)
+## 1.0.0 (14 Mar 2017)
 
 This is zap's first stable release. All exported APIs are now final, and no
 further breaking changes will be made in the 1.x release series. Anyone using a
@@ -558,7 +571,7 @@ contributions to this release.
 [#365]: https://github.com/uber-go/zap/pull/365
 [#372]: https://github.com/uber-go/zap/pull/372
 
-## v1.0.0-rc.3 (7 Mar 2017)
+## 1.0.0-rc.3 (7 Mar 2017)
 
 This is the third release candidate for zap's stable release. There are no
 breaking changes.
@@ -584,7 +597,7 @@ Thanks to @ansel1 and @suyash for their contributions to this release.
 [#353]: https://github.com/uber-go/zap/pull/353
 [#311]: https://github.com/uber-go/zap/pull/311
 
-## v1.0.0-rc.2 (21 Feb 2017)
+## 1.0.0-rc.2 (21 Feb 2017)
 
 This is the second release candidate for zap's stable release. It includes two
 breaking changes.
@@ -630,7 +643,7 @@ Thanks to @skipor and @chapsuk for their contributions to this release.
 [#326]: https://github.com/uber-go/zap/pull/326
 [#300]: https://github.com/uber-go/zap/pull/300
 
-## v1.0.0-rc.1 (14 Feb 2017)
+## 1.0.0-rc.1 (14 Feb 2017)
 
 This is the first release candidate for zap's stable release. There are multiple
 breaking changes and improvements from the pre-release version. Most notably:
@@ -650,7 +663,7 @@ breaking changes and improvements from the pre-release version. Most notably:
 * Sampling is more accurate, and doesn't depend on the standard library's shared
   timer heap.
 
-## v0.1.0-beta.1 (6 Feb 2017)
+## 0.1.0-beta.1 (6 Feb 2017)
 
 This is a minor version, tagged to allow users to pin to the pre-1.0 APIs and
 upgrade at their leisure. Since this is the first tagged release, there are no
