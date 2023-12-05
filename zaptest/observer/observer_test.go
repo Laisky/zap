@@ -29,6 +29,8 @@ import (
 
 	"github.com/Laisky/zap"
 	"github.com/Laisky/zap/zapcore"
+
+	//revive:disable:dot-imports
 	. "github.com/Laisky/zap/zaptest/observer"
 )
 

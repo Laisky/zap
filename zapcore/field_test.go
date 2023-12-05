@@ -29,9 +29,10 @@ import (
 	"time"
 
 	"github.com/Laisky/zap"
-	. "github.com/Laisky/zap/zapcore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	//revive:disable:dot-imports
+	. "github.com/Laisky/zap/zapcore"
 )
 
 type users int
@@ -88,9 +89,8 @@ type errObj struct {
 func (eobj *errObj) Error() string {
 	if eobj.kind == 1 {
 		panic("panic in Error() method")
-	} else {
-		return eobj.errMsg
 	}
+	return eobj.errMsg
 }
 
 func TestUnknownFieldType(t *testing.T) {

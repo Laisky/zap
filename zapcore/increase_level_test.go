@@ -25,10 +25,12 @@ import (
 	"testing"
 
 	"github.com/Laisky/zap"
-	. "github.com/Laisky/zap/zapcore"
-	"github.com/Laisky/zap/zaptest/observer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	//revive:disable:dot-imports
+	. "github.com/Laisky/zap/zapcore"
+	"github.com/Laisky/zap/zaptest/observer"
 )
 
 func TestIncreaseLevel(t *testing.T) {

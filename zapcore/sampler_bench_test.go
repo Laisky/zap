@@ -27,8 +27,10 @@ import (
 	"time"
 
 	"github.com/Laisky/zap/internal/ztest"
-	. "github.com/Laisky/zap/zapcore"
 	"github.com/stretchr/testify/assert"
+
+	//revive:disable:dot-imports
+	. "github.com/Laisky/zap/zapcore"
 )
 
 var counterTestCases = [][]string{

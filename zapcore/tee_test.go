@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/Laisky/zap/internal/ztest"
+	//revive:disable:dot-imports
 	. "github.com/Laisky/zap/zapcore"
 	"github.com/Laisky/zap/zaptest/observer"
 

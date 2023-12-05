@@ -23,6 +23,7 @@ package zapcore_test
 import (
 	"testing"
 
+	//revive:disable:dot-imports
 	. "github.com/Laisky/zap/zapcore"
 )
 

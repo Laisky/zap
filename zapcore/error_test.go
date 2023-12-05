@@ -28,9 +28,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Laisky/zap/zapcore"
-	. "github.com/Laisky/zap/zapcore"
 	"go.uber.org/multierr"
+
+	//revive:disable:dot-imports
+	. "github.com/Laisky/zap/zapcore"
 )
 
 type errTooManyUsers int
@@ -205,6 +206,6 @@ func (enc brokenArrayObjectEncoder) AddArray(key string, marshaler ArrayMarshale
 		}))
 }
 
-func (enc brokenArrayObjectEncoder) AppendObject(zapcore.ObjectMarshaler) error {
+func (enc brokenArrayObjectEncoder) AppendObject(ObjectMarshaler) error {
 	return enc.Err
 }

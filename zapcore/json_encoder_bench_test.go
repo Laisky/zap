@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	//revive:disable:dot-imports
 	. "github.com/Laisky/zap/zapcore"
 )
 
