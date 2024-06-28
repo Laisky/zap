@@ -32,11 +32,6 @@ var (
 	_ leveledEnabler = (*hooked)(nil)
 )
 
-type hookedWithFields struct {
-	Core
-	funcs []func(Entry, []Field) error
-}
-
 // RegisterHooks wraps a Core and runs a collection of user-defined callback
 // hooks each time a message is logged. Execution of the callbacks is blocking.
 //
@@ -52,14 +47,6 @@ func RegisterHooks(core Core, hooks ...func(Entry) error) Core {
 
 func (h *hooked) Level() Level {
 	return LevelOf(h.Core)
-}
-
-// RegisterHooksWithFields like RegisterHooks but and invoke hooks with arbitary fileds
-func RegisterHooksWithFields(core Core, hooks ...func(Entry, []Field) error) Core {
-	return &hookedWithFields{
-		Core:  core,
-		funcs: hooks[:len(hooks):len(hooks)],
-	}
 }
 
 func (h *hooked) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
@@ -89,6 +76,19 @@ func (h *hooked) Write(ent Entry, _ []Field) error {
 	return err
 }
 
+type hookedWithFields struct {
+	Core
+	funcs []func(Entry, []Field) error
+}
+
+// RegisterHooksWithFields like RegisterHooks but and invoke hooks with arbitary fileds
+func RegisterHooksWithFields(core Core, hooks ...func(Entry, []Field) error) Core {
+	return &hookedWithFields{
+		Core:  core,
+		funcs: hooks[:len(hooks):len(hooks)],
+	}
+}
+
 func (h *hookedWithFields) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
 	// Let the wrapped Core decide whether to log this message or not. This
 	// also gives the downstream a chance to register itself directly with the
@@ -115,4 +115,44 @@ func (h *hookedWithFields) Write(ent Entry, fs []Field) error {
 		err = multierr.Append(err, h.funcs[i](ent, fs))
 	}
 	return err
+}
+
+// filter is a Core that wraps another Core and filters messages based on
+// user-defined criteria.
+type filter struct {
+	Core
+	filter func(Entry, []Field) bool
+}
+
+// RegisterFilter wraps a Core and filters messages based on a user-defined
+func RegisterFilter(core Core, userFilter func(Entry, []Field) bool) Core {
+	return &filter{
+		Core:   core,
+		filter: userFilter,
+	}
+}
+
+// Check calls the underlying Core only if the filter function returns true.
+func (f *filter) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
+	if !f.filter(ent, f.Core.Fields()) {
+		return nil
+	}
+
+	if downstream := f.Core.Check(ent, ce); downstream != nil {
+		return downstream.AddCore(ent, f)
+	}
+
+	return ce
+}
+
+func (f *filter) With(fields []Field) Core {
+	return &filter{
+		Core:   f.Core.With(fields),
+		filter: f.filter,
+	}
+}
+
+// Write noop
+func (f *filter) Write(ent Entry, fields []Field) error {
+	return nil
 }

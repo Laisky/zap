@@ -81,3 +81,27 @@ func TestHooks(t *testing.T) {
 		}
 	}
 }
+
+func TestFilter(t *testing.T) {
+	filter := func(ent Entry, fields []Field) bool {
+		return ent.Level > DebugLevel
+	}
+
+	core, logs := observer.New(DebugLevel)
+	filteredCore := RegisterFilter(core, filter)
+
+	// Write some log entries
+	err := filteredCore.Write(Entry{Message: "debug message", Level: DebugLevel}, nil)
+	require.NoError(t, err)
+
+	err = filteredCore.Write(Entry{Message: "info message", Level: InfoLevel}, nil)
+	require.NoError(t, err)
+
+	err = filteredCore.Write(Entry{Message: "warn message", Level: WarnLevel}, nil)
+	require.NoError(t, err)
+
+	logEntries := logs.All()
+	require.Len(t, logEntries, 2, "Expected 2 log entry")
+	require.Equal(t, "info message", logEntries[0].Message)
+	require.Equal(t, "warn message", logEntries[1].Message)
+}

@@ -65,6 +65,13 @@ func HooksWithFields(hooks ...func(zapcore.Entry, []zapcore.Field) error) Option
 	})
 }
 
+// Filter registers a filter function with the Logger's underlying zapcore.Core.
+func Filter(filter func(zapcore.Entry, []zapcore.Field) bool) Option {
+	return optionFunc(func(log *Logger) {
+		log.core = zapcore.RegisterFilter(log.core, filter)
+	})
+}
+
 // Fields adds fields to the Logger.
 func Fields(fs ...Field) Option {
 	return optionFunc(func(log *Logger) {
