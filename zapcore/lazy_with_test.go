@@ -21,6 +21,7 @@
 package zapcore_test
 
 import (
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -64,6 +65,7 @@ func TestLazyCore(t *testing.T) {
 		initialFields []zapcore.Field
 		withChains    [][]zapcore.Field
 		wantLogs      []observer.LoggedEntry
+		wantSkipInit  bool
 	}{
 		{
 			name:     "no logging, no with, inner core with never called, inner core check never called",
@@ -92,6 +94,38 @@ func TestLazyCore(t *testing.T) {
 				{makeInt64Field("c", 33), makeInt64Field("d", 44)},
 			},
 			wantLogs: []observer.LoggedEntry{},
+		},
+		{
+			name: "1 log, discarded, no-chains, inner core with never called",
+			entries: []zapcore.Entry{
+				{Level: zapcore.DebugLevel, Message: "log-at-debug"},
+			},
+			initialFields: []zapcore.Field{
+				makeInt64Field("a", 11), makeInt64Field("b", 22),
+			},
+			wantLogs:     []observer.LoggedEntry{},
+			wantSkipInit: true,
+		},
+		{
+			name: "1 log, logged, no-chains, inner core with called",
+			entries: []zapcore.Entry{
+				{Level: zapcore.WarnLevel, Message: "log-at-warn"},
+			},
+			initialFields: []zapcore.Field{
+				makeInt64Field("a", 11), makeInt64Field("b", 22),
+			},
+			wantLogs: []observer.LoggedEntry{
+				{
+					Entry: zapcore.Entry{
+						Level:   zapcore.WarnLevel,
+						Message: "log-at-warn",
+					},
+					Context: []zapcore.Field{
+						makeInt64Field("a", 11),
+						makeInt64Field("b", 22),
+					},
+				},
+			},
 		},
 		{
 			name: "2 logs, 1 dropped, 2-chained with, inner core with called once, inner core check never called",
@@ -141,7 +175,7 @@ func TestLazyCore(t *testing.T) {
 						ce.Write()
 					}
 				}
-				if len(tt.entries) > 0 || len(tt.withChains) > 0 {
+				if !tt.wantSkipInit && (len(tt.entries) > 0 || len(tt.withChains) > 0) {
 					checkCounts(1, "expected with calls because the logger had entries or with chains")
 				} else {
 					checkCounts(0, "expected no with calls because the logger is not used yet")
@@ -151,4 +185,35 @@ func TestLazyCore(t *testing.T) {
 			}, tt.initialFields...)
 		})
 	}
+}
+
+// TestLazyCoreRace tests concurrent access to lazyWithCore methods
+// This is a regression test for issue #1426
+func TestLazyCoreRace(t *testing.T) {
+	core, _ := observer.New(zapcore.InfoLevel)
+	lazyCore := zapcore.NewLazyWith(core, []zapcore.Field{
+		makeInt64Field("lazy", 42),
+	})
+
+	var wg sync.WaitGroup
+	const numGoroutines = 50
+
+	// Test concurrent access to Enabled() method which was the source of the race
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			// These operations should not race
+			_ = lazyCore.Enabled(zapcore.InfoLevel)
+			_ = lazyCore.Enabled(zapcore.DebugLevel)
+
+			// Also test other methods for good measure
+			if ce := lazyCore.Check(zapcore.Entry{Level: zapcore.InfoLevel, Message: "test"}, nil); ce != nil {
+				_ = lazyCore.Write(zapcore.Entry{Level: zapcore.InfoLevel, Message: "test"}, nil)
+			}
+		}()
+	}
+
+	wg.Wait()
 }

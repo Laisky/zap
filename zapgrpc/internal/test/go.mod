@@ -1,11 +1,11 @@
 module github.com/Laisky/zap/zapgrpc/internal/test
 
-go 1.17
+go 1.18
 
 require (
 	github.com/stretchr/testify v1.8.1
 	github.com/Laisky/zap v1.16.0
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc 1.56.3
 )
 
 require (
