@@ -90,15 +90,17 @@ func TestFilter(t *testing.T) {
 	core, logs := observer.New(DebugLevel)
 	filteredCore := RegisterFilter(core, filter)
 
-	// Write some log entries
-	err := filteredCore.Write(Entry{Message: "debug message", Level: DebugLevel}, nil)
-	require.NoError(t, err)
-
-	err = filteredCore.Write(Entry{Message: "info message", Level: InfoLevel}, nil)
-	require.NoError(t, err)
-
-	err = filteredCore.Write(Entry{Message: "warn message", Level: WarnLevel}, nil)
-	require.NoError(t, err)
+	// Write some log entries through the Check pipeline
+	entries := []Entry{
+		{Message: "debug message", Level: DebugLevel},
+		{Message: "info message", Level: InfoLevel},
+		{Message: "warn message", Level: WarnLevel},
+	}
+	for _, ent := range entries {
+		if ce := filteredCore.Check(ent, nil); ce != nil {
+			ce.Write()
+		}
+	}
 
 	logEntries := logs.All()
 	require.Len(t, logEntries, 2, "Expected 2 log entry")
