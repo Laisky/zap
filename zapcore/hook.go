@@ -90,13 +90,20 @@ func RegisterHooksWithFields(core Core, hooks ...func(Entry, []Field) error) Cor
 }
 
 func (h *hookedWithFields) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
-	// Let the wrapped Core decide whether to log this message or not. This
-	// also gives the downstream a chance to register itself directly with the
-	// CheckedEntry.
-	if downstream := h.Core.Check(ent, ce); downstream != nil {
+	// A tee sibling may already have accepted this entry. Register hooks only
+	// if the wrapped Core adds a writer of its own, without checking it twice.
+	var registered int
+	if ce != nil {
+		registered = len(ce.cores)
+	}
+	downstream := h.Core.Check(ent, ce)
+	if downstream == nil {
+		return ce
+	}
+	if len(downstream.cores) > registered {
 		return downstream.AddCore(ent, h)
 	}
-	return ce
+	return downstream
 }
 
 func (h *hookedWithFields) With(fields []Field) Core {
@@ -110,9 +117,17 @@ func (h *hookedWithFields) Write(ent Entry, fs []Field) error {
 	// Since our downstream had a chance to register itself directly with the
 	// CheckedMessage, we don't need to call it here.
 	var err error
+	context := h.Fields()
 	for i := range h.funcs {
-		fs = append(fs[:len(fs):len(fs)], h.Fields()...)
-		err = multierr.Append(err, h.funcs[i](ent, fs))
+		// Each callback owns its field slice, so scalar mutations cannot affect
+		// subsequent callbacks, call-site fields, or the Core's bound context.
+		var fields []Field
+		if size := len(fs) + len(context); size > 0 {
+			fields = make([]Field, size)
+			copy(fields, fs)
+			copy(fields[len(fs):], context)
+		}
+		err = multierr.Append(err, h.funcs[i](ent, fields))
 	}
 	return err
 }
@@ -135,14 +150,12 @@ func RegisterFilter(core Core, userFilter func(Entry, []Field) bool) Core {
 // Check calls the underlying Core only if the filter function returns true.
 func (f *filter) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
 	if !f.filter(ent, f.Fields()) {
-		return nil
+		return ce
 	}
 
-	if downstream := f.Core.Check(ent, ce); downstream != nil {
-		return downstream.AddCore(ent, f)
-	}
-
-	return ce
+	// The filter has no writer of its own. Delegate registration so wrappers
+	// can distinguish accepted entries from an already accepted tee sibling.
+	return f.Core.Check(ent, ce)
 }
 
 func (f *filter) With(fields []Field) Core {
