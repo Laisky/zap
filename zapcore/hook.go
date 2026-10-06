@@ -111,7 +111,7 @@ func (h *hookedWithFields) Write(ent Entry, fs []Field) error {
 	// CheckedMessage, we don't need to call it here.
 	var err error
 	for i := range h.funcs {
-		fs = append(fs[:len(fs):len(fs)], h.Core.Fields()...)
+		fs = append(fs[:len(fs):len(fs)], h.Fields()...)
 		err = multierr.Append(err, h.funcs[i](ent, fs))
 	}
 	return err
@@ -134,7 +134,7 @@ func RegisterFilter(core Core, userFilter func(Entry, []Field) bool) Core {
 
 // Check calls the underlying Core only if the filter function returns true.
 func (f *filter) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
-	if !f.filter(ent, f.Core.Fields()) {
+	if !f.filter(ent, f.Fields()) {
 		return nil
 	}
 
@@ -153,6 +153,6 @@ func (f *filter) With(fields []Field) Core {
 }
 
 // Write noop
-func (f *filter) Write(ent Entry, fields []Field) error {
+func (f *filter) Write(_ Entry, _ []Field) error {
 	return nil
 }
