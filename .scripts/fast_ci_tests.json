@@ -1,0 +1,23 @@
+[
+  {
+    "package": "./zapcore",
+    "tests": [
+      "TestLevelString",
+      "TestLevelText",
+      "TestParseLevel",
+      "TestLevelUnmarshalUnknownText"
+    ]
+  },
+  {
+    "package": ".",
+    "tests": [
+      "TestRegisterDefaultEncoders",
+      "TestRegisterEncoder",
+      "TestDuplicateRegisterEncoder",
+      "TestRegisterEncoderNoName",
+      "TestNewEncoder",
+      "TestNewEncoderNotRegistered",
+      "TestNewEncoderNoName"
+    ]
+  }
+]

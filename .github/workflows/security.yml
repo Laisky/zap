@@ -1,0 +1,31 @@
+name: Go vulnerability scan
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+    branches: ['*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vulncheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: '1.27.x'
+      - uses: golang/govulncheck-action@v1
+        name: Install govulncheck
+        with:
+          go-version-input: 1.27.x
+          go-package: -version
+      - name: Preserve the existing source vulnerability gate
+        run: make vulncheck
