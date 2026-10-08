@@ -50,13 +50,20 @@ func (h *hooked) Level() Level {
 }
 
 func (h *hooked) Check(ent Entry, ce *CheckedEntry) *CheckedEntry {
-	// Let the wrapped Core decide whether to log this message or not. This
-	// also gives the downstream a chance to register itself directly with the
-	// CheckedEntry.
-	if downstream := h.Core.Check(ent, ce); downstream != nil {
+	// A tee sibling may have accepted the entry already. Run these hooks only
+	// when the wrapped branch adds a writer, and evaluate its Check once.
+	var registered int
+	if ce != nil {
+		registered = len(ce.cores)
+	}
+	downstream := h.Core.Check(ent, ce)
+	if downstream == nil {
+		return ce
+	}
+	if len(downstream.cores) > registered {
 		return downstream.AddCore(ent, h)
 	}
-	return ce
+	return downstream
 }
 
 func (h *hooked) With(fields []Field) Core {
