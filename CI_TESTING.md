@@ -2,7 +2,7 @@
 
 At the maintainer's request, automatic pre-merge testing is repository-wide
 gofmt and eleven explicitly named unit tests for logging level conversion and
-encoder registration/error handling. This limited gate runs Go 1.27.1 once
+encoder registration/error handling. This limited gate runs Go 1.27.2 once
 without coverage, race instrumentation, performance, fuzz, environment tests
 or auxiliary-module dependency installation. Discovery and execution must
 include every allowlisted test exactly once; skips, errors, missing tests,
@@ -35,3 +35,17 @@ This change neither publishes/deploys artifacts nor alters secrets, credentials,
 repository security or branch protection settings. A five-minute quick-job
 timeout limits runaway tests; measured clean/cached runtime is recorded in the
 PR separately from toolchain download and GitHub runner setup.
+
+## Compiler security patch (2026-10-08)
+
+CI selects Go 1.27.2 explicitly for the current compiler and standard-library
+security fixes. This selection is separate from module dependency versions
+and the unchanged language floor. Test selections, assertions, security
+gates and manual qualification scheduling remain unchanged. Historical
+runtime receipts retain their original compiler provenance.
+
+The retained manual compatibility matrix uses Go 1.26.9 and Go 1.27.2.
+
+Release source: https://go.dev/doc/devel/release . Build images and production
+deployment remain with their coordinated owners; this CI amendment does
+not claim that currently deployed binaries were rebuilt or rolled out.
