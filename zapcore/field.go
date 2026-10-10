@@ -198,7 +198,7 @@ func (f Field) Equals(other Field) bool {
 	switch f.Type {
 	case BinaryType, ByteStringType:
 		return bytes.Equal(f.Interface.([]byte), other.Interface.([]byte))
-	case ArrayMarshalerType, ObjectMarshalerType, ErrorType, ReflectType:
+	case ArrayMarshalerType, ObjectMarshalerType, InlineMarshalerType, ErrorType, ReflectType:
 		return reflect.DeepEqual(f.Interface, other.Interface)
 	default:
 		return f == other
