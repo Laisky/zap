@@ -237,7 +237,7 @@ func NewDevelopmentConfig() Config {
 
 // Build constructs a logger from the Config and Options.
 func (cfg Config) Build(opts ...Option) (*Logger, error) {
-	enc, err := cfg.buildEncoder()
+	enc, err := cfg.BuildEncoder()
 	if err != nil {
 		return nil, err
 	}
@@ -323,6 +323,13 @@ func (cfg Config) openSinks() (zapcore.WriteSyncer, zapcore.WriteSyncer, error) 
 		return nil, nil, err
 	}
 	return sink, errSink, nil
+}
+
+// BuildEncoder constructs the configured encoder without opening output sinks
+// or requiring a logging level. It supports built-in and registered encodings
+// and is useful when constructing a custom zapcore.Core from a Config.
+func (cfg Config) BuildEncoder() (zapcore.Encoder, error) {
+	return cfg.buildEncoder()
 }
 
 func (cfg Config) buildEncoder() (zapcore.Encoder, error) {
