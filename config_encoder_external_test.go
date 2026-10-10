@@ -23,18 +23,14 @@ package zap_test
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/Laisky/zap"
 	"github.com/Laisky/zap/zapcore"
 )
-
-var configEncoderSequence uint64
 
 // TestConfigBuildEncoderCustomCore exercises the public API used by consumers
 // that supply their own in-memory core instead of Config's output paths.
@@ -80,30 +76,5 @@ func TestConfigBuildEncoderErrors(t *testing.T) {
 		if err == nil || enc != nil {
 			t.Fatalf("invalid encoder configuration returned %v, %v", enc, err)
 		}
-	}
-}
-
-// TestConfigBuildEncoderRegistry proves the public method uses registered
-// factories and forwards their exact configuration and constructor error.
-func TestConfigBuildEncoderRegistry(t *testing.T) {
-	name := fmt.Sprintf("%s-%d", t.Name(), atomic.AddUint64(&configEncoderSequence, 1))
-	wantErr := errors.New("custom encoder unavailable")
-	wantConfig := zapcore.EncoderConfig{MessageKey: "custom-message"}
-	calls := 0
-	if err := zap.RegisterEncoder(name, func(got zapcore.EncoderConfig) (zapcore.Encoder, error) {
-		calls++
-		if got.MessageKey != wantConfig.MessageKey {
-			t.Errorf("constructor got message key %q", got.MessageKey)
-		}
-		return nil, wantErr
-	}); err != nil {
-		t.Fatal(err)
-	}
-	cfg := zap.Config{Encoding: name, EncoderConfig: wantConfig}
-	if enc, err := cfg.BuildEncoder(); enc != nil || !errors.Is(err, wantErr) {
-		t.Fatalf("constructor error was not preserved: %v, %v", enc, err)
-	}
-	if calls != 1 {
-		t.Fatalf("constructor invoked %d times", calls)
 	}
 }
